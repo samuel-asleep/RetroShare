@@ -85,7 +85,8 @@ QMutex GxsIdDetails::mIconCacheMutex;
 
 static std::string groupIconCacheKey(const RsGxsGroupId& id, const QString& iconPath)
 {
-    std::string key = id.toStdString();
+    std::string key = "gxs:";
+    key.append(id.toStdString());
     key.append("|");
     key.append(iconPath.toStdString());
     return key;
@@ -93,7 +94,8 @@ static std::string groupIconCacheKey(const RsGxsGroupId& id, const QString& icon
 
 static std::string groupIconCacheKeyFromString(const QString& idStr, const QString& iconPath)
 {
-    std::string key = idStr.toStdString();
+    std::string key = "str:";
+    key.append(idStr.toStdString());
     key.append("|");
     key.append(iconPath.toStdString());
     return key;
