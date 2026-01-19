@@ -136,9 +136,9 @@ void WikiEditDialog::generateMerge()
 	// A future implementation could use diff/patch algorithms to actually merge page content.
 	QStringList authorList;
 
-	// Sort by date (using SORT role)
-	std::sort(checkedItems.begin(), checkedItems.end(), 
-		[](QTreeWidgetItem *a, QTreeWidgetItem *b) {
+	// Sort by date (using SORT role) - using stable_sort for Qt containers
+	std::stable_sort(checkedItems.begin(), checkedItems.end(), 
+		[](const auto &a, const auto &b) {
 			return a->data(WET_COL_DATE, WET_ROLE_SORT).toString() < 
 			       b->data(WET_COL_DATE, WET_ROLE_SORT).toString();
 		});
