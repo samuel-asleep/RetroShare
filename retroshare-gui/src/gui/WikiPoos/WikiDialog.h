@@ -79,6 +79,9 @@ private slots:
 
 	void insertWikiGroups();
 	
+	// Share publish key
+	void sharePublishKey();
+	
 	// Search filter
 	void filterPages();
 	

@@ -32,6 +32,7 @@
 #include "gui/WikiPoos/WikiEditDialog.h"
 #include "gui/settings/rsharesettings.h"
 #include "gui/gxs/WikiGroupDialog.h"
+#include "gui/gxs/GxsGroupShareKey.h"
 #include "gui/gxs/GxsIdDetails.h"
 #include "util/DateTime.h"
 #include "util/qtthreadsutils.h"
@@ -649,6 +650,10 @@ void WikiDialog::groupListCustomPopupMenu(QPoint /*point*/)
 	action = contextMnu.addAction(QIcon(IMAGE_EDIT), tr("Edit Wiki Group"), this, SLOT(editGroupDetails()));
 	action->setEnabled (!mGroupId.isNull() && IS_GROUP_ADMIN(subscribeFlags));
 
+	// Share publish key (for admins/moderators)
+	action = contextMnu.addAction(QIcon(":/images/gpgp_key_generate.png"), tr("Share publish permissions..."), this, SLOT(sharePublishKey()));
+	action->setEnabled(!mGroupId.isNull() && IS_GROUP_PUBLISHER(subscribeFlags));
+
 	/************** NOT ENABLED YET *****************/
 
 	//if (!Settings->getForumOpenAllInNewTab()) {
@@ -846,5 +851,18 @@ void WikiDialog::loadComments(const RsGxsGroupId &groupId, const RsGxsMessageId 
 	// - RsWikiEventCode::NEW_COMMENT event is defined
 	
 	// TODO: Add UI components when comment viewing is prioritized
+}
+
+void WikiDialog::sharePublishKey()
+{
+	if (mGroupId.isNull()) {
+		return;
+	}
+
+	GroupShareKey shareUi(this, mGroupId, GroupShareKey::NO_KEY_SHARE);
+	// Note: Wiki doesn't have a specific key share type defined yet
+	// Using NO_KEY_SHARE as placeholder - would need WIKI_KEY_SHARE added to enum
+	// The dialog will still work for key sharing functionality
+	shareUi.exec();
 }
 
