@@ -35,6 +35,7 @@
 class WikiAddDialog;
 class WikiEditDialog;
 class UserNotify;
+class GxsCommentTreeWidget;
 
 class WikiDialog : public MainPage
 {
@@ -119,6 +120,9 @@ private:
 	RsGxsMessageId mPageSelected;
 	std::string mModSelected;
 
+	GxsCommentTreeWidget *mCommentTreeWidget;
+	RsGxsGroupId mCurrentGroupId;
+	RsGxsMessageId mCurrentPageId;
 
 	QTreeWidgetItem *mYourGroups;
 	QTreeWidgetItem *mSubscribedGroups;
