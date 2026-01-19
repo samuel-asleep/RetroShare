@@ -132,9 +132,8 @@ void WikiEditDialog::generateMerge()
 		return;
 	}
 
-	// Simple merge strategy: concatenate selected edits in chronological order
-	// A more sophisticated implementation could use diff/patch algorithms
-	QString mergedText;
+	// Placeholder merge: currently only tracks selected edits/authors in chronological order.
+	// A future implementation could use diff/patch algorithms to actually merge page content.
 	QStringList authorList;
 
 	// Sort by date (using SORT role)
@@ -144,30 +143,30 @@ void WikiEditDialog::generateMerge()
 			       b->data(WET_COL_DATE, WET_ROLE_SORT).toString();
 		});
 
-	// Build merged content
+	// Build list of authors for selected edits
 	for (QTreeWidgetItem *item : checkedItems)
 	{
 		QString pageId = item->text(WET_COL_PAGEID);
-		// In a real implementation, would fetch the actual page content
-		// For now, just collect the edit information
+		// In a real implementation, we would fetch and merge the actual page content here.
+		// For now, we only record which authors' edits are selected for manual merge.
 		authorList.append(item->text(WET_COL_AUTHORID));
 	}
 
-	// Update the edit text with merge information
-	QString mergeNote = tr("\n\n[Merged edits from: %1]").arg(authorList.join(", "));
+	// Update the edit text with information about the selected edits
+	QString mergeNote = tr("\n\n[Edits selected for manual merge from: %1]").arg(authorList.join(", "));
 	QString currentText = ui.textEdit->toPlainText();
 	
 	if (currentText.isEmpty())
 	{
-		currentText = tr("This is a merged version of multiple edits.");
+		currentText = tr("This edit marks multiple revisions for manual merge. Their content has not been automatically merged.");
 	}
 	
 	ui.textEdit->setPlainText(currentText + mergeNote);
 	mCurrentText = ui.textEdit->toPlainText();
 	
-	std::cerr << "WikiEditDialog::generateMerge() Merged " << checkedItems.size() << " edits" << std::endl;
-	QMessageBox::information(this, tr("Merge Complete"), 
-		tr("Merged %1 edit(s). Review the content and click Republish to save.").arg(checkedItems.size()));
+	std::cerr << "WikiEditDialog::generateMerge() Prepared merge of " << checkedItems.size() << " edits" << std::endl;
+	QMessageBox::information(this, tr("Merge Prepared"), 
+		tr("Prepared merge of %1 edit(s). Note: Actual content merging is not yet implemented - only author attribution has been added.").arg(checkedItems.size()));
 }
 
 

@@ -87,6 +87,6 @@ QIcon WikiUserNotify::getMainIcon(bool hasNew)
 void WikiUserNotify::iconClicked()
 {
 	// Note: MainWindow::Wiki would need to be added to MainWindow::Page enum
-	// For now, this is a placeholder that will be enabled when wiki is built with CONFIG*=wikipoos
+	// For now, this is a placeholder that will be enabled when wiki is built with CONFIG += wikipoos
 	// MainWindow::showWindow(MainWindow::Wiki);
 }

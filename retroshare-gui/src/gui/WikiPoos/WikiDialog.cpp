@@ -491,7 +491,7 @@ void WikiDialog::loadPages(const RsGxsGroupId &groupId)
 		}
 
 		// Update UI in main thread
-		RsQThreadUtils::postToObject([this, snapshots]()
+		RsQThreadUtils::postToObject([this, snapshots = std::move(snapshots)]()
 		{
 			clearGroupTree();
 			clearWikiPage();
@@ -809,20 +809,6 @@ void WikiDialog::filterPages()
 			bool matches = pageName.contains(filterText, Qt::CaseInsensitive);
 			item->setHidden(!matches);
 		}
-	}
-	
-	// Filter page content if currently viewing a page
-	if (filterText.isEmpty())
-	{
-		// Show all content when filter is cleared
-		ui.textBrowser->setVisible(true);
-	}
-	else
-	{
-		// Highlight search term in content
-		ui.textBrowser->setVisible(true);
-		// The actual content highlighting would be done in updateWikiPage
-		// For now, just ensure the browser is visible
 	}
 }
 
