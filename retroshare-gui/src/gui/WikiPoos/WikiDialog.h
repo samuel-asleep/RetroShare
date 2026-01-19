@@ -81,6 +81,9 @@ private slots:
 	
 	// Search filter
 	void filterPages();
+	
+	// Comments (placeholder for future UI integration)
+	void loadComments(const RsGxsGroupId &groupId, const RsGxsMessageId &msgId);
 
 private:
 

@@ -826,3 +826,25 @@ void WikiDialog::filterPages()
 	}
 }
 
+void WikiDialog::loadComments(const RsGxsGroupId &groupId, const RsGxsMessageId &msgId)
+{
+	// Placeholder for comment loading functionality
+	// Full implementation would require:
+	// 1. Adding a QTabWidget to WikiDialog.ui with Page and Comments tabs
+	// 2. Adding a GxsCommentTreeWidget to the Comments tab
+	// 3. Calling widget->setup(rsWiki) and widget->requestComments()
+	// 4. Handling NEW_COMMENT events to refresh the comment view
+	
+#ifdef WIKI_DEBUG
+	std::cerr << "WikiDialog::loadComments() for page " << msgId << " in group " << groupId << std::endl;
+	std::cerr << "Note: Full comment UI not yet integrated - backend support exists via rsWiki->getComments/submitComment" << std::endl;
+#endif
+	
+	// The backend APIs are available:
+	// - rsWiki->getComments(token, comments)
+	// - rsWiki->submitComment(token, comment)
+	// - RsWikiEventCode::NEW_COMMENT event is defined
+	
+	// TODO: Add UI components when comment viewing is prioritized
+}
+
