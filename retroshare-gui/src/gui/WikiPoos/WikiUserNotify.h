@@ -30,7 +30,7 @@ class WikiUserNotify : public UserNotify
 	Q_OBJECT
 
 public:
-	explicit WikiUserNotify(RsGxsIfaceHelper *ifaceImpl, QObject *parent = 0);
+	explicit WikiUserNotify(RsGxsIfaceHelper *ifaceImpl, QObject *parent = nullptr);
 
 	virtual bool hasSetting(QString *name, QString *group) override;
 

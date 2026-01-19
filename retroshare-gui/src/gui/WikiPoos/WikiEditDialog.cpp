@@ -134,7 +134,7 @@ void WikiEditDialog::generateMerge()
 
 	// Placeholder merge: currently only tracks selected edits/authors in chronological order.
 	// A future implementation could use diff/patch algorithms to actually merge page content.
-	QStringList authorList;
+	QStringList editList;
 
 	// Sort by date (using SORT role) - using stable_sort for Qt containers
 	std::stable_sort(checkedItems.begin(), checkedItems.end(), 
@@ -143,17 +143,20 @@ void WikiEditDialog::generateMerge()
 			       b->data(WET_COL_DATE, WET_ROLE_SORT).toString();
 		});
 
-	// Build list of authors for selected edits
+	// Build list of selected edits (author and page id) for manual merge
 	for (QTreeWidgetItem *item : checkedItems)
 	{
-		QString pageId = item->text(WET_COL_PAGEID);
+		const QString pageId(item->text(WET_COL_PAGEID));
+		const QString authorId(item->text(WET_COL_AUTHORID));
 		// In a real implementation, we would fetch and merge the actual page content here.
-		// For now, we only record which authors' edits are selected for manual merge.
-		authorList.append(item->text(WET_COL_AUTHORID));
+		// For now, we only record which authors' edits (and their page ids) are selected for manual merge.
+		editList.append(tr("%1 (page %2)").arg(authorId, pageId));
 	}
 
 	// Update the edit text with information about the selected edits
-	QString mergeNote = tr("\n\n[Edits selected for manual merge from: %1]").arg(authorList.join(", "));
+	QString mergeNote = tr("\n\n[Edits selected for manual merge from: %1]\n"
+	                       "[Note: No automatic content merging has been performed.]")
+	                         .arg(editList.join(", "));
 	QString currentText = ui.textEdit->toPlainText();
 	
 	if (currentText.isEmpty())

@@ -81,7 +81,9 @@ QIcon WikiUserNotify::getIcon()
 
 QIcon WikiUserNotify::getMainIcon(bool hasNew)
 {
-    return hasNew ? FilesDefs::getIconFromQtResourcePath(":/icons/png/wiki-notify.png") : FilesDefs::getIconFromQtResourcePath(":/icons/png/wiki.png");
+	const QString basePath = ":/icons/png/wiki";
+	const QString iconPath = basePath + (hasNew ? "-notify" : "") + ".png";
+	return FilesDefs::getIconFromQtResourcePath(iconPath);
 }
 
 void WikiUserNotify::iconClicked()
