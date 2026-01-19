@@ -78,6 +78,9 @@ private slots:
 	void wikiGroupChanged(const QString &groupId);
 
 	void insertWikiGroups();
+	
+	// Search filter
+	void filterPages();
 
 private:
 

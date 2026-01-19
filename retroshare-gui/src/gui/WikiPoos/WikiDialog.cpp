@@ -106,6 +106,9 @@ WikiDialog::WikiDialog(QWidget *parent) :
     connect(ui.groupTreeWidget, SIGNAL(treeCustomContextMenuRequested(QPoint)), this, SLOT(groupListCustomPopupMenu(QPoint)));
     connect(ui.groupTreeWidget, SIGNAL(treeItemActivated(QString)), this, SLOT(wikiGroupChanged(QString)));
 
+    // Search filter
+    connect(ui.lineEdit, SIGNAL(textChanged(QString)), this, SLOT(filterPages()));
+
     // Set initial size of the splitter
     ui.listSplitter->setStretchFactor(0, 0);
     ui.listSplitter->setStretchFactor(1, 1);
@@ -786,5 +789,40 @@ void WikiDialog::handleEvent_main_thread(std::shared_ptr<const RsEvent> event)
                 break;
         }
     }
+}
+
+void WikiDialog::filterPages()
+{
+	QString filterText = ui.lineEdit->text().trimmed();
+	
+	// Filter page tree
+	for (int i = 0; i < ui.treeWidget_Pages->topLevelItemCount(); ++i)
+	{
+		QTreeWidgetItem *item = ui.treeWidget_Pages->topLevelItem(i);
+		if (filterText.isEmpty())
+		{
+			item->setHidden(false);
+		}
+		else
+		{
+			QString pageName = item->text(WIKI_GROUP_COL_PAGENAME);
+			bool matches = pageName.contains(filterText, Qt::CaseInsensitive);
+			item->setHidden(!matches);
+		}
+	}
+	
+	// Filter page content if currently viewing a page
+	if (filterText.isEmpty())
+	{
+		// Show all content when filter is cleared
+		ui.textBrowser->setVisible(true);
+	}
+	else
+	{
+		// Highlight search term in content
+		ui.textBrowser->setVisible(true);
+		// The actual content highlighting would be done in updateWikiPage
+		// For now, just ensure the browser is visible
+	}
 }
 
