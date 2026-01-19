@@ -48,6 +48,8 @@ public:
 	virtual QString pageName() const { return tr("Wiki Pages") ; } //MainPage
 	virtual QString helpText() const { return ""; } //MainPage
 
+	virtual UserNotify *createUserNotify(QObject *parent) override;
+
 protected:
 	virtual void showEvent(QShowEvent *event) override;
 

@@ -27,6 +27,7 @@
 #include <QShowEvent>
 
 #include "WikiDialog.h"
+#include "WikiUserNotify.h"
 #include "gui/WikiPoos/WikiAddDialog.h"
 #include "gui/WikiPoos/WikiEditDialog.h"
 #include "gui/settings/rsharesettings.h"
@@ -144,6 +145,11 @@ WikiDialog::~WikiDialog()
 
 	// save settings
 	processSettings(false);
+}
+
+UserNotify *WikiDialog::createUserNotify(QObject *parent)
+{
+	return new WikiUserNotify(rsWiki, parent);
 }
 
 void WikiDialog::showEvent(QShowEvent *event)
@@ -552,13 +558,16 @@ void WikiDialog::loadWikiPage(const RsGxsGrpMsgIdPair &msgId)
 		RsWikiSnapshot page = snapshots[0];
 		
 		// Update UI in main thread
-		RsQThreadUtils::postToObject([this, page]()
+		RsQThreadUtils::postToObject([this, page, msgId]()
 		{
 #ifdef WIKI_DEBUG
 			std::cerr << "WikiDialog::loadWikiPage() PageId: " << page.mMeta.mMsgId
 				<< " Page: " << page.mMeta.mMsgName << std::endl;
 #endif
 			updateWikiPage(page);
+			
+			// Mark message as read when viewed
+			rsWiki->setMessageReadStatus(msgId, true);
 		}, this);
 	});
 }

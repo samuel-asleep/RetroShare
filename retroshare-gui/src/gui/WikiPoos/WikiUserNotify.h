@@ -21,23 +21,31 @@
 #ifndef WIKIUSERNOTIFY_H
 #define WIKIUSERNOTIFY_H
 
-#include "gui/gxs/GxsUserNotify.h"
-#include "gui/gxs/GxsGroupFrameDialog.h"
+#include "gui/common/UserNotify.h"
 
-class WikiUserNotify : public GxsUserNotify
+class RsGxsIfaceHelper;
+
+class WikiUserNotify : public UserNotify
 {
 	Q_OBJECT
 
 public:
-	explicit WikiUserNotify(RsGxsIfaceHelper *ifaceImpl, const GxsGroupFrameDialog *g, QObject *parent = 0);
+	explicit WikiUserNotify(RsGxsIfaceHelper *ifaceImpl, QObject *parent = 0);
 
 	virtual bool hasSetting(QString *name, QString *group) override;
+
+protected:
+	virtual void startUpdate() override;
 
 private:
 	virtual QIcon getIcon() override;
 	virtual QIcon getMainIcon(bool hasNew) override;
+	virtual unsigned int getNewCount() override;
 
 	virtual void iconClicked() override;
+
+	RsGxsIfaceHelper *mInterface;
+	unsigned int mNewCount;
 };
 
 #endif // WIKIUSERNOTIFY_H

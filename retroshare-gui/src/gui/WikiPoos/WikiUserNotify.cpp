@@ -19,15 +19,13 @@
  *******************************************************************************/
 
 #include "retroshare/rswiki.h"
+#include "retroshare/rsgxsifacehelper.h"
 #include "WikiUserNotify.h"
-#include "gui/MainWindow.h"
 #include "gui/common/FilesDefs.h"
 
-WikiUserNotify::WikiUserNotify(RsGxsIfaceHelper *ifaceImpl, const GxsGroupFrameDialog *g, QObject *parent) :
-    GxsUserNotify(ifaceImpl, g, parent)
+WikiUserNotify::WikiUserNotify(RsGxsIfaceHelper *ifaceImpl, QObject *parent) :
+    UserNotify(parent), mInterface(ifaceImpl), mNewCount(0)
 {
-	// Don't count child messages for Wiki (only count new pages/snapshots)
-	mCountChildMsgs = false;
 }
 
 bool WikiUserNotify::hasSetting(QString *name, QString *group)
@@ -36,6 +34,44 @@ bool WikiUserNotify::hasSetting(QString *name, QString *group)
 	if (group) *group = "Wiki";
 
 	return true;
+}
+
+void WikiUserNotify::startUpdate()
+{
+	// Get unread message stats from wiki service
+	mNewCount = 0;
+	
+	if (mInterface)
+	{
+		// Get group statistics and count new messages
+		std::list<RsGroupMetaData> groupList;
+		mInterface->getGroupMeta(RS_TOKREQ_ANSTYPE_SUMMARY, groupList);
+		
+		for (auto& meta : groupList)
+		{
+			if (meta.mSubscribeFlags & GXS_SERV::GROUP_SUBSCRIBE_SUBSCRIBED)
+			{
+				// Count unread messages in subscribed groups
+				std::vector<RsMsgMetaData> msgList;
+				mInterface->getMsgMeta(RS_TOKREQ_ANSTYPE_SUMMARY, meta.mGroupId, msgList);
+				
+				for (auto& msg : msgList)
+				{
+					if (msg.mMsgStatus & GXS_SERV::GXS_MSG_STATUS_UNREAD)
+					{
+						mNewCount++;
+					}
+				}
+			}
+		}
+	}
+	
+	update();
+}
+
+unsigned int WikiUserNotify::getNewCount()
+{
+	return mNewCount;
 }
 
 QIcon WikiUserNotify::getIcon()
@@ -50,5 +86,7 @@ QIcon WikiUserNotify::getMainIcon(bool hasNew)
 
 void WikiUserNotify::iconClicked()
 {
-	MainWindow::showWindow(MainWindow::Wiki);
+	// Note: MainWindow::Wiki would need to be added to MainWindow::Page enum
+	// For now, this is a placeholder that will be enabled when wiki is built with CONFIG*=wikipoos
+	// MainWindow::showWindow(MainWindow::Wiki);
 }
