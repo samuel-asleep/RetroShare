@@ -39,6 +39,24 @@
 #include <QPainter>
 #include <limits>
 
+/* Helper function to format bytes as B/KB/MB/GB */
+static QString formatBytes(quint64 bytes)
+{
+	if (bytes < 1024)
+		return QString::number(bytes) + " B";
+	
+	float val = bytes / 1024.0;
+	if (val < 1024.0)
+		return QString::asprintf("%.2f KB", val);
+	
+	val /= 1024.0;
+	if (val < 1024.0)
+		return QString::asprintf("%.2f MB", val);
+	
+	val /= 1024.0;
+	return QString::asprintf("%.2f GB", val);
+}
+
 class BWListDelegate: public QAbstractItemDelegate
 {
 public:
@@ -159,6 +177,11 @@ void BWListDelegate::paint(QPainter * painter, const QStyleOptionViewItem & opti
 		}
 		painter->drawText(option.rect, Qt::AlignRight, temp);
 		break;
+	case COLUMN_IN_TOTAL:
+	case COLUMN_OUT_TOTAL:
+		temp = formatBytes(index.data().value<quint64>());
+		painter->drawText(option.rect, Qt::AlignRight, temp);
+		break;
 	default:
 		painter->drawText(option.rect, Qt::AlignLeft, index.data().toString());
 	}
@@ -255,6 +278,9 @@ void BwCtrlWindow::updateBandwidth()
 	item -> setData(COLUMN_OUT_ALLOC, Qt::DisplayRole, std::numeric_limits<float>::max());
 	item -> setData(COLUMN_OUT_ALLOC_SENT, Qt::DisplayRole, std::numeric_limits<qint64>::max());
 
+	item -> setData(COLUMN_IN_TOTAL, Qt::DisplayRole, qulonglong(totalRates.mTotalIn));
+	item -> setData(COLUMN_OUT_TOTAL, Qt::DisplayRole, qulonglong(totalRates.mTotalOut));
+
 	time_t now = time(NULL);
 	for(it = rateMap.begin(); it != rateMap.end(); ++it)
 	{
@@ -305,6 +331,9 @@ void BwCtrlWindow::updateBandwidth()
 			peer_item -> setData(COLUMN_OUT_ALLOC, Qt::DisplayRole, std::numeric_limits<float>::max());
 			peer_item -> setData(COLUMN_OUT_ALLOC_SENT, Qt::DisplayRole, std::numeric_limits<qint64>::max());
 		}
+
+		peer_item -> setData(COLUMN_IN_TOTAL, Qt::DisplayRole, qulonglong(it->second.mTotalIn));
+		peer_item -> setData(COLUMN_OUT_TOTAL, Qt::DisplayRole, qulonglong(it->second.mTotalOut));
 
 
 		/* colour the columns */
