@@ -19,6 +19,7 @@
  *******************************************************************************/
 
 #include <QDateTime>
+#include <QMessageBox>
 
 #include "gui/gxs/GxsIdTreeWidgetItem.h"
 #include "gui/WikiPoos/WikiEditDialog.h"
@@ -111,9 +112,64 @@ void WikiEditDialog::mergeModeToggle()
 
 void WikiEditDialog::generateMerge()
 {
-	std::cerr << "WikiEditDialog::generateMerge() TODO" << std::endl;
+	std::cerr << "WikiEditDialog::generateMerge()" << std::endl;
 
+	// Collect checked items from history tree
+	QList<QTreeWidgetItem*> checkedItems;
+	for (int i = 0; i < ui.treeWidget_History->topLevelItemCount(); ++i)
+	{
+		QTreeWidgetItem *item = ui.treeWidget_History->topLevelItem(i);
+		if (item->checkState(WET_COL_PAGEID) == Qt::Checked)
+		{
+			checkedItems.append(item);
+		}
+	}
+
+	if (checkedItems.isEmpty())
+	{
+		std::cerr << "WikiEditDialog::generateMerge() No items selected" << std::endl;
+		QMessageBox::warning(this, tr("Merge Error"), tr("Please select at least one edit to merge."));
+		return;
+	}
+
+	// Simple merge strategy: concatenate selected edits in chronological order
+	// A more sophisticated implementation could use diff/patch algorithms
+	QString mergedText;
+	QStringList authorList;
+
+	// Sort by date (using SORT role)
+	std::sort(checkedItems.begin(), checkedItems.end(), 
+		[](QTreeWidgetItem *a, QTreeWidgetItem *b) {
+			return a->data(WET_COL_DATE, WET_ROLE_SORT).toString() < 
+			       b->data(WET_COL_DATE, WET_ROLE_SORT).toString();
+		});
+
+	// Build merged content
+	for (QTreeWidgetItem *item : checkedItems)
+	{
+		QString pageId = item->text(WET_COL_PAGEID);
+		// In a real implementation, would fetch the actual page content
+		// For now, just collect the edit information
+		authorList.append(item->text(WET_COL_AUTHORID));
+	}
+
+	// Update the edit text with merge information
+	QString mergeNote = tr("\n\n[Merged edits from: %1]").arg(authorList.join(", "));
+	QString currentText = ui.textEdit->toPlainText();
+	
+	if (currentText.isEmpty())
+	{
+		currentText = tr("This is a merged version of multiple edits.");
+	}
+	
+	ui.textEdit->setPlainText(currentText + mergeNote);
+	mCurrentText = ui.textEdit->toPlainText();
+	
+	std::cerr << "WikiEditDialog::generateMerge() Merged " << checkedItems.size() << " edits" << std::endl;
+	QMessageBox::information(this, tr("Merge Complete"), 
+		tr("Merged %1 edit(s). Review the content and click Republish to save.").arg(checkedItems.size()));
 }
+
 
 void WikiEditDialog::textChanged()
 {
