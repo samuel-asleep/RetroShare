@@ -84,7 +84,7 @@ Need to expand `RsWikiEventCode` enum to include the 4 missing event types and u
 ---
 
 ### Todo 3: Implement Republish & Merging Function for WikiEdits
-**Status:** ⚠️ **PARTIALLY IMPLEMENTED (PLACEHOLDER)**
+**Status:** ⚠️ **PARTIALLY IMPLEMENTED (Backend APIs added, merge logic incomplete)**
 
 #### Implementation Details:
 **What IS Implemented:**
@@ -98,6 +98,10 @@ Need to expand `RsWikiEventCode` enum to include the 4 missing event types and u
   - Checkbox to enable merge mode
   - "Merge" button and edit history tree with checkboxes
   - `generateMerge()` function (WikiEditDialog.cpp:113-173)
+- ✅ **Backend content fetching APIs (commit daedbe63):**
+  - `getSnapshotContent(snapshotId, content)` - Fetch single page content
+  - `getSnapshotsContent(snapshotIds, contents)` - Bulk fetch multiple pages
+  - Implemented in p3wiki.cc/h for Todo 3 support
 
 **What is NOT Implemented:**
 - ❌ **Accept/Reject Edit Functionality** - No methods to accept or reject edits
@@ -108,6 +112,7 @@ Need to expand `RsWikiEventCode` enum to include the 4 missing event types and u
     > "Placeholder merge: currently only tracks selected edits/authors in chronological order. A future implementation could use diff/patch algorithms to actually merge page content."
   - `generateMerge()` only adds author attribution notes (lines 157-172)
   - Message states: *"Actual content merging is not yet implemented"*
+  - **Note:** Backend APIs are now available to fetch content, but GUI doesn't use them yet
 - ❌ **No Moderation Approval Workflow**
   - Cannot display pending edits for moderator review
   - Cannot approve specific edits before republishing
@@ -116,12 +121,16 @@ Need to expand `RsWikiEventCode` enum to include the 4 missing event types and u
 #### Files Referenced:
 - `/home/runner/work/RetroShare/RetroShare/retroshare-gui/src/gui/WikiPoos/WikiEditDialog.cpp` (lines 107-173, 494-501)
 - `/home/runner/work/RetroShare/RetroShare/retroshare-gui/src/gui/WikiPoos/WikiDialog.cpp` (lines 285-305)
+- `/home/runner/work/RetroShare/RetroShare/libretroshare/src/retroshare/rswiki.h` (lines 178-195) - Content APIs
 - `/home/runner/work/RetroShare/RetroShare/Wiki_Todos_V2.md` (line 21 states "not done yet")
 
 #### What's Missing:
-Accept/reject edit infrastructure, diff/merge algorithms, and moderator approval workflow before pages can be republished with selected edits.
+1. Accept/reject edit infrastructure
+2. Actual diff/merge algorithms using the new backend APIs
+3. Integration of `getSnapshotsContent()` API into WikiEditDialog
+4. Moderator approval workflow before republishing
 
-#### Blocking: **YES** - This is a core feature. The todo states it should show edits and allow moderators to republish merged content. Current implementation is just a placeholder.
+#### Blocking: **YES** - This is a core feature. Backend APIs are ready but GUI merge logic needs completion.
 
 ---
 
@@ -189,41 +198,37 @@ Nothing. The todo comment about "not functional" appears to be outdated.
 ---
 
 ### Todo 6: Add Moderators Feature (Like Forums)
-**Status:** ❌ **NOT IMPLEMENTED - REQUIRES BACKEND**
+**Status:** ✅ **BACKEND IMPLEMENTED** (GUI integration pending)
 
 #### Implementation Details:
-**What Exists:**
-- ✅ Design concept mentioned in rswiki.h comment (lines 48-49):
-  > "A collection will be moderated by its creator... We need a way to swap out / replace / fork collections if moderator is rubbish."
-- ✅ Complete specification provided in `TODO_6_SPECIFICATION.md`
+**What IS Implemented in Libretroshare (commit 6f69b681):**
+- ✅ Moderator API methods in rswiki.h (lines 144-176):
+  - `addModerator(grpId, moderatorId)` - Add moderator to wiki collection
+  - `removeModerator(grpId, moderatorId)` - Remove moderator from wiki collection
+  - `getModerators(grpId, moderators)` - Get list of moderators
+  - `isActiveModerator(grpId, authorId, editTime)` - Check if user is active moderator
+- ✅ Implementation in p3wiki.cc/h with network-wide validation
+- ✅ Moderator data structures and serialization
+- ✅ Message validation logic (self-edits allowed + moderator permissions)
 
 **What's NOT Implemented:**
-- ❌ No moderator code in libretroshare:
-  - `rswiki.h` - Only has design comment
-  - `p3wiki.cc` - No moderator implementation
-  - `rswikiitems.h` - No moderator data structures
 - ❌ No moderator UI in WikiGroupDialog.cpp/h
-- ❌ No moderator management methods (addModerator, removeModerator, getModerators)
-
-#### Why Not Done:
-According to `IMPLEMENTATION_SUMMARY.md`:
-> **Todo 6: Forums-Style Moderators - Status: ⚠️ Requires Backend Implementation**
-> Requires changes to **libretroshare submodule** (separate repository)
-> Must be implemented as a separate PR
+- ❌ No GUI for adding/removing moderators
+- ❌ No moderator list display in wiki group details
 
 #### Files Referenced:
-- `/home/runner/work/RetroShare/RetroShare/libretroshare/src/retroshare/rswiki.h` (lines 48-49 - comment only)
+- `/home/runner/work/RetroShare/RetroShare/libretroshare/src/retroshare/rswiki.h` (lines 144-176)
+- `/home/runner/work/RetroShare/RetroShare/libretroshare/src/services/p3wiki.h` (lines 71-73)
+- `/home/runner/work/RetroShare/RetroShare/libretroshare/src/services/p3wiki.cc` - Implementation (commit 6f69b681)
 - `/home/runner/work/RetroShare/RetroShare/TODO_6_SPECIFICATION.md` - Complete specification
-- `/home/runner/work/RetroShare/RetroShare/IMPLEMENTATION_SUMMARY.md` (lines 117-160)
 
 #### What's Missing:
-Complete moderator system including:
-1. Data structures in libretroshare (moderator list with GxsId, add time, termination time)
-2. Validation logic for network-wide message validation
-3. Interface methods (addModerator, removeModerator, getModerators)
-4. GUI integration in WikiGroupDialog
+GUI integration in WikiGroupDialog:
+1. Add/remove moderator buttons (similar to forums)
+2. Moderator list display widget
+3. Connect UI to backend API methods
 
-#### Blocking: **YES** - This is explicitly listed as a high-priority todo in maintainer comments.
+#### Blocking: **PARTIALLY** - Backend complete, only GUI work remains (lower priority).
 
 ---
 
@@ -320,6 +325,12 @@ Nothing. All backend API methods are present and implemented.
 - ✅ Blocking sync methods available
 - ✅ Event emission via `notifyChanges()` (lines 59-81)
 - ✅ GXS integration complete
+- ✅ **NEW:** Moderator management implemented (commit 6f69b681)
+  - addModerator(), removeModerator(), getModerators()
+  - isActiveModerator() with network-wide validation
+- ✅ **NEW:** Content fetching APIs for merge operations (commit daedbe63)
+  - getSnapshotContent() for single page fetch
+  - getSnapshotsContent() for bulk page fetch
 
 **Data Layer (rswikiitems.cc/h):**
 - ✅ Serialization classes defined:
@@ -327,6 +338,7 @@ Nothing. All backend API methods are present and implemented.
   - `RsGxsWikiSnapshotItem` for wiki pages
   - `RsGxsWikiCommentItem` for comments
 - ✅ All items properly inherit from GXS base classes
+- ✅ Moderator list serialization updated
 
 **Interface (rswiki.h):**
 - ✅ Clean virtual interface defined
@@ -335,39 +347,32 @@ Nothing. All backend API methods are present and implemented.
   - `RsWikiSnapshot`
   - `RsWikiComment`
 - ✅ Event structure `RsGxsWikiEvent` defined
+- ✅ **NEW:** Moderator management interface (lines 144-176)
+- ✅ **NEW:** Content fetching interface (lines 178-195)
 
-**What's Missing in Backend:**
+**What's Still Missing in Backend:**
 - ❌ Specific event codes (NEW_SNAPSHOT, NEW_COLLECTION, SUBSCRIBE_STATUS_CHANGED, NEW_COMMENT)
-- ❌ Moderator system (data structures, validation, API methods)
+  - Only generic UPDATED_* events exist
 
 ---
 
 ## Final Verdict
 
-### Issue Completion Status: ⚠️ **Issue NOT Complete**
+### Issue Completion Status: ⚠️ **Issue NOT Complete** (but significant progress made)
 
 ### Blocking Items:
 
 1. **Todo 3: Republish & Merging Function**
    - **Severity:** HIGH (marked as high priority by maintainer)
-   - **Status:** Only placeholder implementation exists
+   - **Status:** Backend APIs ready (content fetching), GUI merge logic incomplete
    - **What's needed:** 
      - Accept/reject edit functionality for moderators
-     - Actual content merging with diff algorithms
+     - Actual content merging with diff algorithms (integrate getSnapshotsContent API)
      - Moderation approval workflow
    - **Impact:** Core wiki feature for moderators to manage edits
+   - **Progress:** Backend support added in commit daedbe63, needs GUI integration
 
-2. **Todo 6: Moderators Feature**
-   - **Severity:** HIGH (marked as high priority by maintainer)
-   - **Status:** Not implemented
-   - **What's needed:**
-     - Backend implementation in libretroshare (separate PR)
-     - Moderator data structures and validation logic
-     - API methods for add/remove/get moderators
-     - GUI integration in WikiGroupDialog
-   - **Impact:** Essential for proper wiki moderation
-
-3. **Todo 2: rsEvents (Partial)**
+2. **Todo 2: rsEvents (Partial)**
    - **Severity:** MEDIUM
    - **Status:** Generic events work, specific event types missing
    - **What's needed:**
@@ -375,7 +380,7 @@ Nothing. All backend API methods are present and implemented.
      - Update event emission logic to classify event types
    - **Impact:** Better UI responsiveness to specific changes
 
-4. **Todo 1: Remove TokenQueue (Partial)**
+3. **Todo 1: Remove TokenQueue (Partial)**
    - **Severity:** LOW
    - **Status:** WikiDialog modernized, WikiEditDialog still uses TokenQueue
    - **What's needed:**
@@ -385,8 +390,13 @@ Nothing. All backend API methods are present and implemented.
 ### Completed Items:
 - ✅ **Todo 4:** UserNotify fully implemented (pending MainWindow integration)
 - ✅ **Todo 5:** Search Filter fully functional
+- ✅ **Todo 6:** Moderator backend complete (GUI integration needed - non-blocking)
 - ✅ **Todo 7:** Commenting feature complete
 - ✅ **Todo 8:** All backend API methods implemented
+
+### Significant Progress Since Last Review:
+- ✅ **Todo 6 Backend:** Complete moderator system implemented in libretroshare (commit 6f69b681)
+- ✅ **Todo 3 Backend:** Content fetching APIs added for merge operations (commit daedbe63)
 
 ---
 
@@ -395,11 +405,11 @@ Nothing. All backend API methods are present and implemented.
 Based on maintainer comments indicating high vs low priority:
 
 **Must Complete (High Priority):**
-1. Todo 3 - Republish & Merging (blocking core functionality)
-2. Todo 6 - Moderators feature (blocking core functionality)
-3. Todo 2 - Complete rsEvents implementation
+1. Todo 3 - Integrate content fetching APIs into GUI merge logic
+2. Todo 2 - Complete rsEvents implementation with specific event types
 
 **Should Complete (Medium Priority):**
+3. Todo 6 - GUI integration for moderators (backend ready)
 4. Todo 1 - Finish WikiEditDialog async conversion
 
 **Optional (Low Priority - per maintainer):**
@@ -409,16 +419,17 @@ Based on maintainer comments indicating high vs low priority:
 
 ## Conclusion
 
-**5 of 8 todos** are complete or substantially complete. However, **2 critical high-priority todos** (Republish & Merging, Moderators) are incomplete or not implemented, which blocks the issue from being considered complete.
+**6 of 8 todos** are complete or have substantial backend implementation. The critical blocking item is **Todo 3** (merge/republish), which now has backend support but needs GUI integration. **Todo 6** (moderators) has complete backend implementation and only needs GUI work.
 
-The libretroshare backend has all the necessary API infrastructure (Todo 8), but is missing:
-- Specific event type differentiation (Todo 2)
-- Complete moderator system implementation (Todo 6)
+The libretroshare backend has made significant progress with:
+- ✅ Complete moderator system (Todo 6 backend)
+- ✅ Content fetching APIs for merge operations (Todo 3 backend)
+- ⚠️ Missing specific event type differentiation (Todo 2)
 
-**Recommendation:** Address Todo 3 and Todo 6 before closing issue #3107.
+**Recommendation:** Focus on integrating the new backend APIs into the GUI (Todo 3 merge logic, Todo 6 moderator UI), then address Todo 2 event codes.
 
 ---
 
 **Report Generated:** 2026-01-22  
 **Code Branch:** copilot/review-issue-3107-todos  
-**Libretroshare Commit:** aa6a40abe8f4a091e9349eb895daf5cea3e385a5
+**Libretroshare Commit:** ed77137e05332398ce37e7906ba9dc890a783dff (updated)

@@ -1,18 +1,25 @@
-# Libretroshare Wiki Implementation - Missing Features
+# Libretroshare Wiki Implementation - Remaining Features
 
 **Repository:** https://github.com/samuel-asleep/libretroshare  
-**Current Commit:** aa6a40abe8f4a091e9349eb895daf5cea3e385a5  
+**Current Commit:** ed77137e05332398ce37e7906ba9dc890a783dff  
 **Related Issue:** RetroShare/RetroShare#3107
 
 ---
 
 ## Overview
 
-This document specifies the missing backend implementations needed in the libretroshare repository to complete issue #3107 "Wiki Todos V2". The samuel-asleep/libretroshare fork is correctly configured in .gitmodules and needs these additions.
+This document specifies the remaining backend implementation needed in the libretroshare repository to complete issue #3107 "Wiki Todos V2". The samuel-asleep/libretroshare fork is correctly configured in .gitmodules.
+
+**Recent Progress:**
+- ✅ **Todo 6 Backend Complete** (commit 6f69b681): Moderator management fully implemented
+- ✅ **Todo 3 Backend APIs** (commit daedbe63): Content fetching APIs for merge operations added
+- ⚠️ **Todo 2 Incomplete**: Specific event codes still missing
 
 ---
 
-## Required Implementation #1: Specific Wiki Event Codes (Todo 2)
+## Required Implementation: Specific Wiki Event Codes (Todo 2)
+
+**Status:** ⚠️ **INCOMPLETE** - Only generic UPDATED_* events exist
 
 ### Current State
 The event system exists but only has generic codes:
@@ -20,6 +27,11 @@ The event system exists but only has generic codes:
 - `UPDATED_COLLECTION` (0x02)
 
 **File:** `src/retroshare/rswiki.h` (lines 68-72)
+
+**What's Already Done:**
+- ✅ Event structure `RsGxsWikiEvent` properly extends `RsEvent`
+- ✅ Event emission working via `rsEvents->postEvent()` in `p3wiki.cc`
+- ✅ Basic event dispatching to GUI
 
 ### Required Changes
 
@@ -105,263 +117,66 @@ void p3Wiki::notifyChanges(std::vector<RsGxsNotify*>& changes)
 
 ---
 
-## Required Implementation #2: Moderator System (Todo 6)
+## ✅ COMPLETED: Moderator System (Todo 6)
 
-### Current State
-- No moderator data structures exist
-- No moderator API methods
-- No validation logic for moderator permissions
-- RsWikiCollection struct is minimal (only has mDescription, mCategory, mHashTags)
+**Status:** ✅ **IMPLEMENTED** in commit 6f69b681
 
-**Files to modify:**
-- `src/retroshare/rswiki.h` - Add moderator API interface
-- `src/rsitems/rswikiitems.h` - Add moderator data structures
-- `src/rsitems/rswikiitems.cc` - Add serialization for moderator data
-- `src/services/p3wiki.h` - Add moderator method declarations
-- `src/services/p3wiki.cc` - Implement moderator logic and validation
+### What Was Implemented
 
-### Design Specification
+The complete moderator system is now functional in libretroshare:
 
-Follow the forums-style moderator pattern as discussed in issue comments:
+#### API Methods (src/retroshare/rswiki.h, lines 144-176)
+- ✅ `addModerator(grpId, moderatorId)` - Add moderator to wiki collection
+- ✅ `removeModerator(grpId, moderatorId)` - Remove moderator from wiki collection  
+- ✅ `getModerators(grpId, moderators)` - Get list of moderators
+- ✅ `isActiveModerator(grpId, authorId, editTime)` - Check moderator status
 
-#### 2.1 Data Structures
+#### Implementation (src/services/p3wiki.cc/h)
+- ✅ All moderator methods implemented in p3Wiki class
+- ✅ Network-wide message validation logic
+- ✅ Self-edit permission + moderator permission checking
+- ✅ Moderator list serialization in RsGxsWikiCollectionItem
 
-**In `src/rsitems/rswikiitems.h`**, add:
+#### What Remains
+- ❌ GUI integration in WikiGroupDialog (RetroShare main repo, not libretroshare)
+- ❌ Add/remove moderator UI buttons
+- ❌ Moderator list display widget
 
-```cpp
-// Moderator entry with termination date support
-struct RsWikiModeratorEntry {
-    RsGxsId mModeratorId;           // GXS ID of the moderator
-    rstime_t mAddedTime;            // When moderator was added
-    rstime_t mTerminationTime;      // 0 = active, >0 = terminated at this time
-    
-    RsWikiModeratorEntry() : mAddedTime(0), mTerminationTime(0) {}
-};
-
-// Add to RsGxsWikiCollectionItem class:
-// Inside RsGxsWikiCollectionItem, the RsWikiCollection will need moderator list
-```
-
-**In `src/retroshare/rswiki.h`**, update RsWikiCollection:
-
-```cpp
-struct RsWikiCollection: RsGxsGenericGroupData
-{
-    std::string mDescription;
-    std::string mCategory;
-    std::string mHashTags;
-    std::vector<RsWikiModeratorEntry> mModerators;  // NEW: Moderator list
-};
-```
-
-#### 2.2 Serialization
-
-**In `src/rsitems/rswikiitems.cc`**, update the `serial_process` method for `RsGxsWikiCollectionItem`:
-
-```cpp
-void RsGxsWikiCollectionItem::serial_process(RsGenericSerializer::SerializeJob j, RsGenericSerializer::SerializeContext& ctx)
-{
-    RsGxsGrpItem::serial_process(j, ctx);
-    
-    RS_SERIAL_PROCESS(collection.mDescription);
-    RS_SERIAL_PROCESS(collection.mCategory);
-    RS_SERIAL_PROCESS(collection.mHashTags);
-    RS_SERIAL_PROCESS(collection.mModerators);  // NEW: Serialize moderator list
-}
-```
-
-#### 2.3 API Methods
-
-**In `src/retroshare/rswiki.h`**, add to the RsWiki interface:
-
-```cpp
-class RsWiki: public RsGxsIfaceHelper
-{
-public:
-    // ... existing methods ...
-    
-    /* Moderator Management */
-    
-    /**
-     * Add a moderator to a wiki collection
-     * @param groupId The wiki group ID
-     * @param moderatorId The GXS ID to add as moderator
-     * @return true if successful
-     */
-    virtual bool addModerator(const RsGxsGroupId& groupId, const RsGxsId& moderatorId) = 0;
-    
-    /**
-     * Remove a moderator from a wiki collection
-     * Sets termination time instead of deleting to maintain history
-     * @param groupId The wiki group ID
-     * @param moderatorId The GXS ID to remove
-     * @return true if successful
-     */
-    virtual bool removeModerator(const RsGxsGroupId& groupId, const RsGxsId& moderatorId) = 0;
-    
-    /**
-     * Get list of moderators for a wiki collection
-     * @param groupId The wiki group ID
-     * @param moderators Output vector of moderator entries
-     * @param activeOnly If true, only return active moderators (termination time = 0)
-     * @return true if successful
-     */
-    virtual bool getModerators(const RsGxsGroupId& groupId, 
-                               std::vector<RsWikiModeratorEntry>& moderators,
-                               bool activeOnly = true) = 0;
-    
-    /**
-     * Check if a GXS ID is an active moderator for a wiki
-     * @param groupId The wiki group ID
-     * @param gxsId The GXS ID to check
-     * @return true if the ID is an active moderator
-     */
-    virtual bool isModerator(const RsGxsGroupId& groupId, const RsGxsId& gxsId) = 0;
-};
-```
-
-#### 2.4 Implementation
-
-**In `src/services/p3wiki.h`**, add method declarations:
-
-```cpp
-class p3Wiki: public RsGenExchange, public RsWiki
-{
-public:
-    // ... existing methods ...
-    
-    /* Moderator Management - Override from RsWiki */
-    virtual bool addModerator(const RsGxsGroupId& groupId, const RsGxsId& moderatorId) override;
-    virtual bool removeModerator(const RsGxsGroupId& groupId, const RsGxsId& moderatorId) override;
-    virtual bool getModerators(const RsGxsGroupId& groupId, 
-                               std::vector<RsWikiModeratorEntry>& moderators,
-                               bool activeOnly = true) override;
-    virtual bool isModerator(const RsGxsGroupId& groupId, const RsGxsId& gxsId) override;
-    
-protected:
-    // Helper for validation
-    bool isActiveModerator(const RsWikiCollection& collection, const RsGxsId& gxsId, rstime_t atTime) const;
-};
-```
-
-**In `src/services/p3wiki.cc`**, implement the methods:
-
-```cpp
-bool p3Wiki::addModerator(const RsGxsGroupId& groupId, const RsGxsId& moderatorId)
-{
-    // 1. Fetch the collection
-    // 2. Check if caller has admin rights
-    // 3. Check if moderator already exists
-    // 4. If exists and terminated, reactivate (set termination time to 0)
-    // 5. If doesn't exist, add new entry with current time
-    // 6. Update the collection
-    // 7. Return success/failure
-}
-
-bool p3Wiki::removeModerator(const RsGxsGroupId& groupId, const RsGxsId& moderatorId)
-{
-    // 1. Fetch the collection
-    // 2. Check if caller has admin rights
-    // 3. Find the moderator entry
-    // 4. Set termination time to current time (don't delete entry)
-    // 5. Update the collection
-    // 6. Return success/failure
-}
-
-bool p3Wiki::getModerators(const RsGxsGroupId& groupId, 
-                           std::vector<RsWikiModeratorEntry>& moderators,
-                           bool activeOnly)
-{
-    // 1. Fetch the collection
-    // 2. Copy moderator list to output vector
-    // 3. If activeOnly, filter out entries with termination time > 0
-    // 4. Return success/failure
-}
-
-bool p3Wiki::isModerator(const RsGxsGroupId& groupId, const RsGxsId& gxsId)
-{
-    // 1. Fetch the collection
-    // 2. Check if gxsId is in moderator list
-    // 3. Check if termination time is 0 (active)
-    // 4. Return true/false
-}
-
-bool p3Wiki::isActiveModerator(const RsWikiCollection& collection, const RsGxsId& gxsId, rstime_t atTime) const
-{
-    for (const auto& mod : collection.mModerators) {
-        if (mod.mModeratorId == gxsId) {
-            // Check if moderator was active at the given time
-            if (mod.mAddedTime <= atTime && 
-                (mod.mTerminationTime == 0 || mod.mTerminationTime > atTime)) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-```
-
-#### 2.5 Validation Logic
-
-Add validation in message processing to enforce moderator rules:
-
-**In `src/services/p3wiki.cc`**, override or modify message validation:
-
-```cpp
-// This should be added to the message validation logic
-// The exact location depends on how RsGenExchange validates messages
-
-bool p3Wiki::validateWikiMessage(RsGxsMsgItem* msgItem)
-{
-    // Get the message and group info
-    RsGxsWikiSnapshotItem* snapshot = dynamic_cast<RsGxsWikiSnapshotItem*>(msgItem);
-    if (!snapshot) {
-        return true; // Not a snapshot, use default validation
-    }
-    
-    // Get the collection for this message
-    RsWikiCollection collection;
-    // ... fetch collection using msgItem->meta.mGroupId ...
-    
-    // Rule 1: Self-edits are always allowed
-    RsGxsId authorId = msgItem->meta.mAuthorId;
-    RsGxsId originalAuthorId = getOriginalAuthorId(msgItem->meta.mOrigMsgId);
-    
-    if (authorId == originalAuthorId) {
-        return true; // Self-edit allowed
-    }
-    
-    // Rule 2: Non-self edits require active moderator status
-    rstime_t messageTime = msgItem->meta.mPublishTs;
-    
-    if (isActiveModerator(collection, authorId, messageTime)) {
-        return true; // Active moderator can edit
-    }
-    
-    // Rule 3: Reject edits that don't meet criteria
-    std::cerr << "p3Wiki: Rejecting message - author is not original author or active moderator" << std::endl;
-    return false;
-}
-```
-
-#### 2.6 Backward Compatibility
-
-Ensure that wikis created before the moderator system still work:
-
-- Empty moderator list = allow all edits (backward compatible behavior)
-- Only enforce moderator rules if the moderator list is non-empty
-- Serialization must handle missing moderator field gracefully
+**Note:** The backend work for Todo 6 is complete. Only GUI work remains in the main RetroShare repository.
 
 ---
 
-## Testing Requirements
+## ✅ COMPLETED: Content Fetching APIs (Todo 3 Backend)
 
-### Unit Tests
-1. Test event code emission for all 6 event types
-2. Test moderator add/remove/get operations
-3. Test moderator validation logic
-4. Test serialization/deserialization with moderators
+**Status:** ✅ **IMPLEMENTED** in commit daedbe63
 
+### What Was Implemented
+
+Content fetching APIs for merge operations:
+
+#### API Methods (src/retroshare/rswiki.h, lines 178-195)
+- ✅ `getSnapshotContent(snapshotId, content)` - Fetch single page content
+- ✅ `getSnapshotsContent(snapshotIds, contents)` - Bulk fetch multiple pages
+
+#### Implementation (src/services/p3wiki.cc/h)
+- ✅ Token-based async requests implemented
+- ✅ Efficient bulk fetching for merge operations
+- ✅ Returns content mapped by snapshot message ID
+
+#### What Remains
+- ❌ GUI integration in WikiEditDialog to use these APIs (RetroShare main repo)
+- ❌ Actual diff/merge algorithms in GUI
+- ❌ Merge UI logic to fetch and combine content
+
+**Note:** The backend support for Todo 3 is ready. GUI needs to integrate these APIs for actual merging.
+
+---
+
+## Required Implementation #2: Moderator System (Todo 6)
+
+**Status:** ❌ **MOVED TO GUI** - Backend complete, see above
+
+This section is no longer needed as the moderator backend is fully implemented. See "COMPLETED: Moderator System" section above.
 ### Integration Tests
 1. Create wiki group and verify NEW_COLLECTION event
 2. Add page and verify NEW_SNAPSHOT event
@@ -381,57 +196,55 @@ Ensure that wikis created before the moderator system still work:
 
 ## Implementation Order
 
-1. **Phase 1:** Event codes (Todo 2)
+**Phase 1:** Event codes (Todo 2) - THE ONLY REMAINING BACKEND WORK
    - Update enum in rswiki.h
    - Implement event classification in p3wiki.cc
    - Test event emission
 
-2. **Phase 2:** Moderator data structures (Todo 6)
-   - Add RsWikiModeratorEntry
-   - Update RsWikiCollection
-   - Add serialization
-   - Test data persistence
-
-3. **Phase 3:** Moderator API (Todo 6)
-   - Implement add/remove/get methods
-   - Add isModerator helper
-   - Test API functionality
-
-4. **Phase 4:** Validation logic (Todo 6)
-   - Implement message validation
-   - Test moderator permissions
-   - Test network-wide validation
-
-5. **Phase 5:** Integration & testing
-   - Run all tests
-   - Verify backward compatibility
-   - Performance testing
+**Phase 2-5:** ALREADY COMPLETE
+   - ✅ Moderator data structures (Todo 6) - Done in commit 6f69b681
+   - ✅ Moderator API (Todo 6) - Done in commit 6f69b681
+   - ✅ Validation logic (Todo 6) - Done in commit 6f69b681
+   - ✅ Content fetching APIs (Todo 3) - Done in commit daedbe63
 
 ---
 
 ## File Summary
 
-**Files to modify:**
-1. `src/retroshare/rswiki.h` - Event codes, moderator API interface, RsWikiCollection structure
-2. `src/rsitems/rswikiitems.h` - RsWikiModeratorEntry structure
-3. `src/rsitems/rswikiitems.cc` - Moderator serialization
-4. `src/services/p3wiki.h` - Moderator method declarations
-5. `src/services/p3wiki.cc` - Event logic, moderator implementation, validation
+**Files to modify for Todo 2 (only remaining backend work):**
+1. `src/retroshare/rswiki.h` - Add 4 new event codes to enum
+2. `src/services/p3wiki.cc` - Update notifyChanges() to classify events
 
-**Estimated effort:** 2-3 days for experienced developer
+**Files already modified (complete):**
+- ✅ `src/retroshare/rswiki.h` - Moderator API, content fetching API
+- ✅ `src/rsitems/rswikiitems.cc` - Moderator serialization
+- ✅ `src/services/p3wiki.h` - Moderator and content API declarations  
+- ✅ `src/services/p3wiki.cc` - Full moderator and content API implementation
+
+**Estimated effort for Todo 2:** 2-4 hours for experienced developer
 
 ---
 
 ## Notes
 
-- This implementation follows the forums-style moderator pattern as discussed in issue #3107 comments by @csoler
-- The moderator system is independent from publish rights, allowing more flexible management
-- Termination dates allow for audit history while removing moderator permissions
-- Network-wide validation ensures consistent moderation across all peers
-- Empty moderator lists maintain backward compatibility with existing wikis
+- **Todo 6 (Moderators):** Complete backend implementation exists in commit 6f69b681
+  - Follows forums-style moderator pattern as discussed in issue #3107
+  - Network-wide validation ensures consistent moderation
+  - Only GUI work remains (WikiGroupDialog in main RetroShare repo)
+
+- **Todo 3 (Content Fetching):** Backend APIs ready in commit daedbe63
+  - `getSnapshotContent()` and `getSnapshotsContent()` available
+  - GUI needs to integrate these for actual merge operations
+  - WikiEditDialog merge logic needs to use the new APIs
+
+- **Todo 2 (Event Codes):** Only backend work remaining
+  - Need to distinguish NEW vs UPDATED states
+  - Add SUBSCRIBE_STATUS_CHANGED and NEW_COMMENT events
+  - Improves UI responsiveness to specific changes
 
 ---
 
 **Implementation Target:** samuel-asleep/libretroshare repository  
-**After Implementation:** Update RetroShare GUI to use new moderator API  
-**Related GUI Work:** WikiGroupDialog moderator management UI (separate from this backend work)
+**Current Status:** 2 of 3 backend todos complete, 1 remaining (event codes)  
+**After Event Code Implementation:** All backend work will be complete
+**Remaining Work:** GUI integration in main RetroShare repository
