@@ -809,7 +809,7 @@ void WikiEditDialog::requestBaseHistory(const RsGxsGrpMsgIdPair &origMsgId)
 
 		RsQThreadUtils::postToObject([this, snapshots, finalStatus]()
 		{
-			if(finalStatus == RsTokenService::COMPLETE)
+			if (finalStatus == RsTokenService::COMPLETE)
 			{
 				loadBaseHistory(snapshots);
 			}

@@ -292,6 +292,10 @@ void WikiGroupDialog::updateModeratorControls()
 		{
 			tooltip = tr("Only group administrators can manage moderators");
 		}
+		else
+		{
+			tooltip = tr("Moderator management is not available");
+		}
 
 		mAddModeratorButton->setToolTip(tooltip);
 		mRemoveModeratorButton->setToolTip(tooltip);
