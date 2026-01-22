@@ -38,7 +38,7 @@
 #include "util/qtthreadsutils.h"
 
 #include <retroshare/rswiki.h>
-#include <retroshare/rstime.h>
+#include "util/rstime.h"
 
 
 // These should be in retroshare/ folder.
@@ -846,4 +846,3 @@ void WikiDialog::loadComments(const RsGxsGroupId &groupId, const RsGxsMessageId 
 		mCommentTreeWidget->requestComments(groupId, msgVersions, msgId);
 	}
 }
-

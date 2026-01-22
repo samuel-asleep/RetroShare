@@ -28,7 +28,7 @@
 #include "util/qtthreadsutils.h"
 
 #include <retroshare/rsidentity.h>
-#include <retroshare/rstime.h>
+#include "util/rstime.h"
 
 #include <algorithm>
 #include <iostream>
