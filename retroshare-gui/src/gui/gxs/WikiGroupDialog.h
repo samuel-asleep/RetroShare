@@ -53,6 +53,7 @@ private slots:
 	void addModerator();
 	void removeModerator();
 
+private:
     RsWikiCollection mGrp;
 	RsGxsGroupId mCurrentGroupId;
 	RsGroupMetaData mGroupMeta;

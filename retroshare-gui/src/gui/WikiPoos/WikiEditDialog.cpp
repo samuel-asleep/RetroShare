@@ -654,13 +654,24 @@ void WikiEditDialog::requestGroup(const RsGxsGroupId &groupId)
 		}
 
 		std::vector<RsWikiCollection> groups;
+		RsTokenService::GxsRequestStatus finalStatus = status;
 		if (status == RsTokenService::COMPLETE)
 		{
 			rsWiki->getCollections(token, groups);
 		}
 
-		RsQThreadUtils::postToObject([this, groups]()
+		RsQThreadUtils::postToObject([this, groups, finalStatus]()
 		{
+			if (finalStatus != RsTokenService::COMPLETE)
+			{
+				QMessageBox::warning(
+					this,
+					tr("Error loading wiki group"),
+					tr("The wiki group data could not be loaded.\n"
+					   "Please try again later.")
+				);
+				return;
+			}
 			if (groups.size() != 1)
 			{
 				std::cerr << "WikiEditDialog::loadGroup() ERROR No group data";
@@ -707,13 +718,25 @@ void WikiEditDialog::requestPage(const RsGxsGrpMsgIdPair &msgId)
 		}
 
 		std::vector<RsWikiSnapshot> snapshots;
+		RsTokenService::GxsRequestStatus finalStatus = status;
 		if (status == RsTokenService::COMPLETE)
 		{
 			rsWiki->getSnapshots(token, snapshots);
 		}
 
-		RsQThreadUtils::postToObject([this, snapshots]()
+		RsQThreadUtils::postToObject([this, snapshots, finalStatus]()
 		{
+			if (finalStatus != RsTokenService::COMPLETE)
+			{
+				QMessageBox::warning(
+					this,
+					tr("Error loading wiki page"),
+					tr("The wiki page data could not be loaded.\n"
+					   "Please try again later.")
+				);
+				mPageLoading = false;
+				return;
+			}
 			if (snapshots.size() != 1)
 			{
 				std::cerr << "WikiEditDialog::loadPage() ERROR No page data";
@@ -778,14 +801,26 @@ void WikiEditDialog::requestBaseHistory(const RsGxsGrpMsgIdPair &origMsgId)
 		}
 
 		std::vector<RsWikiSnapshot> snapshots;
+		RsTokenService::GxsRequestStatus finalStatus = status;
 		if (status == RsTokenService::COMPLETE)
 		{
 			rsWiki->getRelatedSnapshots(token, snapshots);
 		}
 
-		RsQThreadUtils::postToObject([this, snapshots]()
+		RsQThreadUtils::postToObject([this, snapshots, finalStatus]()
 		{
-			loadBaseHistory(snapshots);
+			if(finalStatus == RsTokenService::COMPLETE)
+			{
+				loadBaseHistory(snapshots);
+			}
+			else
+			{
+				QMessageBox::warning(
+					this,
+					tr("History loading failed"),
+					tr("Unable to load the wiki page history. "
+					   "Please check your connection and try again.") );
+			}
 		}, this);
 	});
 }
@@ -852,14 +887,15 @@ void WikiEditDialog::requestEditTreeData() //const RsGxsGroupId &groupId)
 {
 	// SWITCH THIS TO A THREAD REQUEST - WHEN WE CAN!
 
-	RsThread::async([this]()
+	const RsGxsGroupId groupId = mThreadMsgIdPair.first;
+	RsThread::async([this, groupId]()
 	{
 		RsTokReqOptions opts;
 		opts.mReqType = GXS_REQUEST_TYPE_MSG_DATA;
 		opts.mOptions = RS_TOKREQOPT_MSG_LATEST;
 
 		std::list<RsGxsGroupId> groupIds;
-		groupIds.push_back(mThreadMsgIdPair.first);
+		groupIds.push_back(groupId);
 
 		uint32_t token;
 		rsWiki->getTokenService()->requestMsgInfo(token, RS_TOKREQ_ANSTYPE_DATA, opts, groupIds);
@@ -872,13 +908,24 @@ void WikiEditDialog::requestEditTreeData() //const RsGxsGroupId &groupId)
 		}
 
 		std::vector<RsWikiSnapshot> snapshots;
+		RsTokenService::GxsRequestStatus finalStatus = status;
 		if (status == RsTokenService::COMPLETE)
 		{
 			rsWiki->getSnapshots(token, snapshots);
 		}
 
-		RsQThreadUtils::postToObject([this, snapshots]()
+		RsQThreadUtils::postToObject([this, snapshots, finalStatus]()
 		{
+			if (finalStatus != RsTokenService::COMPLETE)
+			{
+				QMessageBox::warning(
+					this,
+					tr("Error loading wiki history"),
+					tr("The wiki edit history could not be loaded.\n"
+					   "Please try again later.")
+				);
+				return;
+			}
 			loadEditTreeData(snapshots);
 		}, this);
 	});
@@ -1047,7 +1094,7 @@ void WikiEditDialog::performMerge(
 		}
 
 		const QString authorName = getAuthorName(msgId);
-		const QDateTime dateTime = QDateTime::fromTime_t(static_cast<uint>(timestamp));
+		const QDateTime dateTime = QDateTime::fromSecsSinceEpoch(static_cast<qint64>(timestamp));
 		const QString dateStr = dateTime.isValid() ? dateTime.toString() : tr("Unknown date");
 
 		mergedText += tr("<!-- Edit by %1 on %2 -->\n").arg(authorName, dateStr);

@@ -274,11 +274,25 @@ void WikiGroupDialog::updateModeratorControls()
 	mAddModeratorButton->setEnabled(enabled);
 	mRemoveModeratorButton->setEnabled(enabled);
 
-	if (!enabled)
+	if (enabled)
 	{
-		const QString tooltip = isAdmin
-			? tr("Moderators can be managed after the group is created.")
-			: tr("Only group administrators can manage moderators");
+		/* Clear any previous tooltip when the buttons become enabled */
+		mAddModeratorButton->setToolTip(QString());
+		mRemoveModeratorButton->setToolTip(QString());
+	}
+	else
+	{
+		QString tooltip;
+
+		if (!hasGroup)
+		{
+			tooltip = tr("Moderators can be managed after the group is created.");
+		}
+		else if (!isAdmin)
+		{
+			tooltip = tr("Only group administrators can manage moderators");
+		}
+
 		mAddModeratorButton->setToolTip(tooltip);
 		mRemoveModeratorButton->setToolTip(tooltip);
 	}
@@ -353,14 +367,29 @@ void WikiGroupDialog::removeModerator()
 		return;
 	}
 
-	RsThread::async([this, groupId, modId, item]()
+	RsThread::async([this, groupId, modId]()
 	{
 		const bool success = rsWiki->removeModerator(groupId, modId);
-		RsQThreadUtils::postToObject([this, item, success]()
+		RsQThreadUtils::postToObject([this, modId, success]()
 		{
 			if (success)
 			{
-				delete item;
+				if (mModeratorsList)
+				{
+					for (int i = 0; i < mModeratorsList->count(); ++i)
+					{
+						QListWidgetItem *listItem = mModeratorsList->item(i);
+						if (!listItem)
+							continue;
+
+						const RsGxsId currentId(listItem->data(Qt::UserRole).toString().toStdString());
+						if (currentId == modId)
+						{
+							delete mModeratorsList->takeItem(i);
+							break;
+						}
+					}
+				}
 				QMessageBox::information(this, tr("Success"),
 					tr("Moderator removed successfully."));
 			}
