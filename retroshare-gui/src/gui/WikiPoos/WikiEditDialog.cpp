@@ -1094,7 +1094,7 @@ void WikiEditDialog::performMerge(
 		}
 
 		const QString authorName = getAuthorName(msgId);
-		const QDateTime dateTime = QDateTime::fromSecsSinceEpoch(static_cast<qint64>(timestamp));
+		const QDateTime dateTime = DateTime::DateTimeFromTime_t(timestamp);
 		const QString dateStr = dateTime.isValid() ? dateTime.toString() : tr("Unknown date");
 
 		mergedText += tr("<!-- Edit by %1 on %2 -->\n").arg(authorName, dateStr);
