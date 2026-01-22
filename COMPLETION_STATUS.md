@@ -2,18 +2,18 @@
 ## Wiki Todos V2 - Final Assessment
 
 **Date:** 2026-01-22  
-**Libretroshare Commit:** ed77137e05332398ce37e7906ba9dc890a783dff  
+**Libretroshare Commit:** 92cf6c5ef3840f3f0afa2a531f9aea9620df9560  
 **Issue:** https://github.com/RetroShare/RetroShare/issues/3107
 
 ---
 
 ## Executive Summary
 
-**Overall Status: 6 of 8 Todos Substantially Complete**
+**Overall Status: 7 of 8 Todos Substantially Complete**
 
-- ✅ **3 Fully Complete:** Todos 5, 7, 8
+- ✅ **4 Fully Complete:** Todos 2, 5, 7, 8
 - ⚠️ **3 Backend Complete, GUI Pending:** Todos 3, 4, 6
-- ❌ **2 Partially Complete:** Todos 1, 2
+- ❌ **1 Partially Complete:** Todo 1
 
 ---
 
@@ -135,24 +135,23 @@
 
 ---
 
-### ❌ Todo 2: rsEvents - PARTIALLY COMPLETE
-**Status:** Generic events work, specific event codes missing  
-**Complete:**
+### ✅ Todo 2: rsEvents - COMPLETE
+**Status:** All event codes implemented in backend (commit 704d988f)
+**Implementation:**
 - ✅ Event structure `RsGxsWikiEvent` defined
 - ✅ Event emission working via `rsEvents->postEvent()`
-- ✅ Generic UPDATED_SNAPSHOT and UPDATED_COLLECTION events
+- ✅ All 6 event codes implemented:
+  - UPDATED_SNAPSHOT (0x01) - Existing page modified
+  - UPDATED_COLLECTION (0x02) - Existing wiki group modified  
+  - NEW_SNAPSHOT (0x03) - First-time page creation
+  - NEW_COLLECTION (0x04) - New wiki group creation
+  - SUBSCRIBE_STATUS_CHANGED (0x05) - User subscribed/unsubscribed
+  - NEW_COMMENT (0x06) - New comment added
+- ✅ Event classification logic distinguishes NEW vs UPDATED states
 
-**Incomplete:**
-- ❌ Missing 4 specific event codes:
-  - NEW_SNAPSHOT
-  - NEW_COLLECTION
-  - SUBSCRIBE_STATUS_CHANGED
-  - NEW_COMMENT
-- ❌ Event classification logic doesn't distinguish NEW vs UPDATED
+**Location:** `libretroshare/src/retroshare/rswiki.h` and `libretroshare/src/services/p3wiki.cc`
 
-**Location:** `libretroshare/src/retroshare/rswiki.h` (lines 68-72) and `libretroshare/src/services/p3wiki.cc` (lines 59-81)
-
-**Action needed:** Backend changes in libretroshare (see prompt file)
+**No action needed - Backend complete.**
 
 ---
 
@@ -160,7 +159,6 @@
 
 ### High Priority (Blocking Issue Completion)
 1. **Todo 3:** Integrate content fetching APIs into GUI merge logic
-2. **Todo 2:** Add specific event codes in libretroshare backend
 
 ### Medium Priority (Backend Complete, Needs GUI)
 3. **Todo 6:** Add moderator management UI to WikiGroupDialog
@@ -182,22 +180,26 @@ The following can be completed entirely in the RetroShare GUI repository:
 
 ---
 
-## What Requires Backend Changes
+## Backend Status - ALL COMPLETE ✅
 
-Only **Todo 2** requires changes to the libretroshare submodule:
-- Add 4 new event codes to enum
-- Update event emission logic to classify event types
+**All backend work for issue #3107 is now complete** (libretroshare commit 92cf6c5e):
+- ✅ Todo 2: Event codes implemented (commit 704d988f)
+- ✅ Todo 3: Content fetching APIs (commit daedbe63)
+- ✅ Todo 6: Moderator management APIs (commit 6f69b681)
+- ✅ Todo 8: All CRUD operations
 
-See `LIBRETROSHARE_IMPLEMENTATION_PROMPT.md` for detailed specification.
+No further backend changes needed.
 
 ---
 
 ## Conclusion
 
-**6 of 8 todos** have substantial backend implementation. The main remaining work is:
+**7 of 8 todos** have complete implementation, with **all backend work finished**. The remaining work is:
 1. **GUI integration** for moderators (Todo 6) and merge operations (Todo 3)
-2. **Event code expansion** in libretroshare backend (Todo 2)
-3. **Async conversion** of WikiEditDialog (Todo 1)
+2. **Async conversion** of WikiEditDialog (Todo 1)
+3. **MainWindow wiring** for notifications (Todo 4 - low priority)
+
+All backend APIs are complete and ready for GUI integration.
 
 All backend APIs needed for full functionality are implemented. The focus should be on GUI integration and polish.
 
