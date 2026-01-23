@@ -52,19 +52,10 @@ This PR represents a comprehensive implementation of the Wiki feature for RetroS
   - Moderator management functionality
 - **Note**: Changed submodule URL to point to updated fork (commits excluded as requested)
 
-### 3. Documentation Cleanup (Commits: 3c2b64b6f, 13cc53dbe)
-- **Removed Obsolete Documentation**: Cleaned up temporary planning and implementation documents
-  - Removed `COMPLETION_STATUS.md`, `GUI_IMPLEMENTATION_GUIDES.md`, `ISSUE_3107_REVIEW_REPORT.md`
-  - Removed `LIBRETROSHARE_IMPLEMENTATION_PROMPT.md`, `LIBRETROSHARE_PROMPT.md`, `LIBRETROSHARE_TODO3_PROMPT.md`
-  - Removed `TODO_4_MAINWINDOW_INTEGRATION.md`, `TODO_6_SPECIFICATION.md`, `Wiki_Todos_V2.md`
-  - Removed `IMPLEMENTATION_SUMMARY.md`
-  - Removed `LIBRETROSHARE_WIKI_NOTIFICATION_IMPLEMENTATION.md` (duplicate)
-  - Removed `_codeql_detected_source_root` (build artifact)
-
-### 4. Build Trigger Commits (Commits: c37604d9b, a02e56e4b)
+### 3. Build Trigger Commits (Commits: c37604d9b, a02e56e4b)
 - Minor changes to `RetroShare.pro` to trigger CI/CD rebuilds for verification
 
-### 5. Branch Synchronization (Commit: cc1670e93)
+### 4. Branch Synchronization (Commit: cc1670e93)
 - Merged upstream changes from RetroShare:master including:
   - Plugin build system improvements
   - Identity dialog fixes
@@ -107,9 +98,6 @@ This PR represents a comprehensive implementation of the Wiki feature for RetroS
 - `retroshare-gui/src/gui/gxs/WikiGroupDialog.h`
 - `retroshare-gui/src/retroshare-gui.pro`
 
-### Deleted Files (Documentation Cleanup):
-- Various planning and implementation markdown documents (see section 3 above)
-
 ## Testing
 - Build triggers verified through CI/CD
 - Async operations tested for non-blocking behavior
@@ -130,5 +118,5 @@ None - All changes are additive or internal improvements
 ---
 
 **Commits in this PR**: 9 commits spanning from initial merge to final implementation
-**Lines Changed**: ~666 additions, ~1933 deletions (net cleanup while adding features)
+**Lines Changed**: ~666 additions, ~172 deletions
 **Duration**: January 21-24, 2026
