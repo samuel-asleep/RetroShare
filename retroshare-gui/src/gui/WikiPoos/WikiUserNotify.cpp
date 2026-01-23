@@ -38,34 +38,9 @@ bool WikiUserNotify::hasSetting(QString *name, QString *group)
 
 void WikiUserNotify::startUpdate()
 {
-	// Get unread message stats from wiki service
+	// TODO: Implement proper notification counting using RsGxsIfaceHelper's async token-based API
+	// For now, return 0 notifications as a stub implementation
 	mNewCount = 0;
-	
-	if (mInterface)
-	{
-		// Get group statistics and count new messages
-		std::list<RsGroupMetaData> groupList;
-		mInterface->getGroupMeta(RS_TOKREQ_ANSTYPE_SUMMARY, groupList);
-		
-		for (auto& meta : groupList)
-		{
-			if (meta.mSubscribeFlags & GXS_SERV::GROUP_SUBSCRIBE_SUBSCRIBED)
-			{
-				// Count unread messages in subscribed groups
-				std::vector<RsMsgMetaData> msgList;
-				mInterface->getMsgMeta(RS_TOKREQ_ANSTYPE_SUMMARY, meta.mGroupId, msgList);
-				
-				for (auto& msg : msgList)
-				{
-					if (msg.mMsgStatus & GXS_SERV::GXS_MSG_STATUS_UNREAD)
-					{
-						mNewCount++;
-					}
-				}
-			}
-		}
-	}
-	
 	update();
 }
 
