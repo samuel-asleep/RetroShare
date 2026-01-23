@@ -20,6 +20,7 @@
 
 #include "retroshare/rswiki.h"
 #include "retroshare/rsgxsifacehelper.h"
+#include "retroshare/rsgxsifacetypes.h"
 #include "WikiUserNotify.h"
 #include "gui/common/FilesDefs.h"
 
@@ -38,9 +39,23 @@ bool WikiUserNotify::hasSetting(QString *name, QString *group)
 
 void WikiUserNotify::startUpdate()
 {
-	// TODO: Implement proper notification counting using RsGxsIfaceHelper's async token-based API
-	// For now, return 0 notifications as a stub implementation
 	mNewCount = 0;
+	
+	if (mInterface)
+	{
+		// Use the Wiki-specific statistics method
+		// This requires the getWikiStatistics() method to be implemented in libretroshare
+		// See LIBRETROSHARE_WIKI_NOTIFICATION_IMPLEMENTATION.md for implementation details
+		GxsServiceStatistic stats;
+		RsWiki* wikiService = dynamic_cast<RsWiki*>(mInterface);
+		
+		if (wikiService && wikiService->getWikiStatistics(stats))
+		{
+			// Count new messages (both thread messages and child messages/comments)
+			mNewCount = stats.mNumThreadMsgsNew + stats.mNumChildMsgsNew;
+		}
+	}
+	
 	update();
 }
 
