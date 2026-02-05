@@ -19,6 +19,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        fetch-tags: true
     - name: git init
       run: git submodule update --init --remote libbitdht/ libretroshare/ openpgpsdk/ retroshare-webui/ && git --no-pager log --max-count 1
     - name: git submodule supportlibs
@@ -26,12 +29,20 @@ jobs:
     - name: run apt update
       run: sudo apt-get update
     - name: apt install
-      run: sudo apt-get install g++ cmake qt5-qmake qtmultimedia5-dev libqt5x11extras5-dev libasio-dev libbz2-dev libjson-c-dev libssl-dev libsqlcipher-dev libupnp-dev libxss-dev rapidjson-dev libbotan-2-dev doxygen libsecret-1-dev libxml2-dev libxslt1-dev libcurl4-openssl-dev libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libswresample-dev
+      run: sudo apt-get install g++ cmake qt5-qmake qtmultimedia5-dev libqt5x11extras5-dev libasio-dev libbz2-dev libglib2.0-dev libjson-c-dev libssl-dev libsqlcipher-dev libminiupnpc-dev libupnp-dev libxss-dev rapidjson-dev libbotan-2-dev doxygen libsecret-1-dev libxml2-dev libxslt1-dev libcurl4-openssl-dev libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libswresample-dev
     - name: print working directory
       run: pwd && ls -la
     - name: qmake
       run: |
+        RS_TAG="$(git describe --tags --match "v*.*.*" --abbrev=0 2>/dev/null || echo "v0.0.0")"
+        RS_TAG="${RS_TAG#v}"
+        IFS='.' read -r RS_MAJOR_VERSION RS_MINOR_VERSION RS_MINI_VERSION <<< "${RS_TAG}"
+        RS_EXTRA_VERSION=""
         qmake CONFIG+=debug \
+        RS_MAJOR_VERSION="${RS_MAJOR_VERSION}" \
+        RS_MINOR_VERSION="${RS_MINOR_VERSION}" \
+        RS_MINI_VERSION="${RS_MINI_VERSION}" \
+        RS_EXTRA_VERSION="${RS_EXTRA_VERSION}" \
         CONFIG+=rs_autologin \
         CONFIG+=rs_webui \
         CONFIG+=rs_jsonapi \

@@ -37,6 +37,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           persist-credentials: false
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Setup Homebrew
         id: set-up-homebrew
@@ -46,17 +48,9 @@ jobs:
         run: pkg-config --cflags libcrypto
 
       - name: Install Packages
-        run: brew install openssl
-          miniupnpc
-          rapidjson
-          sqlcipher
-          bzip2
-          zlib
-          botan@2
-          libxslt
-          libxml2
-          ffmpeg
-          qt
+        run: |
+          brew install openssl@3
+          brew install miniupnpc rapidjson sqlcipher bzip2 zlib botan@2 libxslt libxml2 ffmpeg qt glib pkg-config
 
       - name: Checkout submodules
         run: |
@@ -66,19 +60,28 @@ jobs:
 
       - name: CI-Build
         run: |
+          BREW_PREFIX="$(brew --prefix)"
+          RS_TAG="$(git describe --tags --match "v*.*.*" --abbrev=0 2>/dev/null || echo "v0.0.0")"
+          RS_TAG="${RS_TAG#v}"
+          IFS='.' read -r RS_MAJOR_VERSION RS_MINOR_VERSION RS_MINI_VERSION <<< "${RS_TAG}"
+          RS_EXTRA_VERSION=""
           qmake6 . -r "CONFIG+=rs_macos14.0" "CONFIG+=release" "CONFIG+=rs_autologin" "CONFIG+=no_rs_sam3" "CONFIG+=no_rs_sam3_libsam3" "CONFIG+=rs_no_rnplib" \
-          INCLUDEPATH+="/opt/homebrew/opt/openssl@3/include" \
-          INCLUDEPATH+="/opt/homebrew/opt/rapidjson/include" \
-          INCLUDEPATH+="/opt/homebrew/opt/sqlcipher/include" \
-          INCLUDEPATH+="/opt/homebrew/opt/miniupnpc/include" \
-          INCLUDEPATH+="/opt/homebrew/opt/libxslt/include" \
-          INCLUDEPATH+="/opt/homebrew/opt/libxml2/include" \
-          QMAKE_LIBDIR+="/opt/homebrew/opt/openssl@3/lib" \
-          QMAKE_LIBDIR+="/opt/homebrew/opt/rapidjson/lib" \
-          QMAKE_LIBDIR+="/opt/homebrew/opt/sqlcipher/lib" \
-          QMAKE_LIBDIR+="/opt/homebrew/opt/miniupnpc/lib" \
-          QMAKE_LIBDIR+="/opt/homebrew/opt/libxslt/lib" \
-          QMAKE_LIBDIR+="/opt/homebrew/opt/libxml2/lib" \
+          RS_MAJOR_VERSION="${RS_MAJOR_VERSION}" \
+          RS_MINOR_VERSION="${RS_MINOR_VERSION}" \
+          RS_MINI_VERSION="${RS_MINI_VERSION}" \
+          RS_EXTRA_VERSION="${RS_EXTRA_VERSION}" \
+          INCLUDEPATH+="${BREW_PREFIX}/opt/openssl@3/include" \
+          INCLUDEPATH+="${BREW_PREFIX}/opt/rapidjson/include" \
+          INCLUDEPATH+="${BREW_PREFIX}/opt/sqlcipher/include" \
+          INCLUDEPATH+="${BREW_PREFIX}/opt/miniupnpc/include" \
+          INCLUDEPATH+="${BREW_PREFIX}/opt/libxslt/include" \
+          INCLUDEPATH+="${BREW_PREFIX}/opt/libxml2/include" \
+          QMAKE_LIBDIR+="${BREW_PREFIX}/opt/openssl@3/lib" \
+          QMAKE_LIBDIR+="${BREW_PREFIX}/opt/rapidjson/lib" \
+          QMAKE_LIBDIR+="${BREW_PREFIX}/opt/sqlcipher/lib" \
+          QMAKE_LIBDIR+="${BREW_PREFIX}/opt/miniupnpc/lib" \
+          QMAKE_LIBDIR+="${BREW_PREFIX}/opt/libxslt/lib" \
+          QMAKE_LIBDIR+="${BREW_PREFIX}/opt/libxml2/lib" \
           CONFIG+=no_retroshare_service \
           CONFIG+=no_retroshare_friendserver
           make -j"$(sysctl -n hw.ncpu)"

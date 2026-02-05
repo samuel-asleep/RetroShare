@@ -863,13 +863,13 @@ macx-* {
 	INCLUDEPATH += "/usr/local/include"
 	RS_UPNP_LIB = miniupnpc
 	lessThan(QT_MAJOR_VERSION, 6): QT += macextras
-	INCLUDEPATH += "/usr/local/opt/openssl/include"
-	QMAKE_LIBDIR += "/usr/local/opt/openssl/lib"
-	QMAKE_LIBDIR += "/usr/local/opt/sqlcipher/lib"
-	QMAKE_LIBDIR += "/usr/local/opt/miniupnpc/lib"
-	INCLUDEPATH += "/usr/local/opt/libxml2/include/libxml2"
-	INCLUDEPATH += "/usr/local/opt/libxslt/include"
-	QMAKE_LIBDIR += "/usr/local/opt/libxslt/lib"
+	exists(/usr/local/opt/openssl/include):INCLUDEPATH += "/usr/local/opt/openssl/include"
+	exists(/usr/local/opt/openssl/lib):QMAKE_LIBDIR += "/usr/local/opt/openssl/lib"
+	exists(/usr/local/opt/sqlcipher/lib):QMAKE_LIBDIR += "/usr/local/opt/sqlcipher/lib"
+	exists(/usr/local/opt/miniupnpc/lib):QMAKE_LIBDIR += "/usr/local/opt/miniupnpc/lib"
+	exists(/usr/local/opt/libxml2/include/libxml2):INCLUDEPATH += "/usr/local/opt/libxml2/include/libxml2"
+	exists(/usr/local/opt/libxslt/include):INCLUDEPATH += "/usr/local/opt/libxslt/include"
+	exists(/usr/local/opt/libxslt/lib):QMAKE_LIBDIR += "/usr/local/opt/libxslt/lib"
 }
 
 # If not yet defined attempt UPnP library autodetection should works at least
