@@ -336,6 +336,7 @@ void WikiGroupDialog::addModeratorToList(const RsGxsId &gxsId)
 
 	// Check if ID already exists by searching column 1 (which contains the ID string)
 	QString idString = QString::fromStdString(gxsId.toStdString());
+	// Column 1 contains the GxsId string representation for lookup
 	QList<QTreeWidgetItem*> items = mModeratorsList->findItems(idString, Qt::MatchExactly, 1);
 	
 	// Verify by checking actual IDs to ensure robustness
