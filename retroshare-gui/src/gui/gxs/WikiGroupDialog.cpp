@@ -90,7 +90,7 @@ WikiGroupDialog::WikiGroupDialog(QWidget *parent)
 		mEventHandlerId, wikiEventType);
 }
 
-WikiGroupDialog::WikiGroupDialog(Mode mode, RsGxsGroupId groupId, QWidget *parent)
+WikiGroupDialog::WikiGroupDialog(Mode mode, const RsGxsGroupId& groupId, QWidget *parent)
 :GxsGroupDialog(mode, groupId, WikiEditEnabledFlags, WikiEditDefaultsFlags, parent),
  mEventHandlerId(0)
 {
@@ -334,30 +334,11 @@ void WikiGroupDialog::addModeratorToList(const RsGxsId &gxsId)
 		return;
 	}
 
-	for (int i = 0; i < mModeratorsList->topLevelItemCount(); ++i)
+	// Check if ID already exists using QTreeWidget::findItems with custom data matching
+	QList<QTreeWidgetItem*> items = mModeratorsList->findItems(QString::fromStdString(gxsId.toStdString()), Qt::MatchExactly, 1);
+	if (!items.isEmpty())
 	{
-		QTreeWidgetItem *existingItem = mModeratorsList->topLevelItem(i);
-		if (!existingItem)
-		{
-			continue;
-		}
-
-		GxsIdRSTreeWidgetItem *gxsItem = dynamic_cast<GxsIdRSTreeWidgetItem*>(existingItem);
-		if (!gxsItem)
-		{
-			continue;
-		}
-
-		RsGxsId existingId;
-		if (!gxsItem->getId(existingId))
-		{
-			continue;
-		}
-
-		if (existingId == gxsId)
-		{
-			return;
-		}
+		return; // ID already in list
 	}
 
 	auto *item = new GxsIdRSTreeWidgetItem(nullptr, GxsIdDetails::ICON_TYPE_AVATAR, true, mModeratorsList);
