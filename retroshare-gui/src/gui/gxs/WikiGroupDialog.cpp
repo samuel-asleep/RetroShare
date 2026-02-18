@@ -334,16 +334,27 @@ void WikiGroupDialog::addModeratorToList(const RsGxsId &gxsId)
 		return;
 	}
 
-	// Check if ID already exists using QTreeWidget::findItems with custom data matching
-	QList<QTreeWidgetItem*> items = mModeratorsList->findItems(QString::fromStdString(gxsId.toStdString()), Qt::MatchExactly, 1);
-	if (!items.isEmpty())
+	// Check if ID already exists by searching column 1 (which contains the ID string)
+	QString idString = QString::fromStdString(gxsId.toStdString());
+	QList<QTreeWidgetItem*> items = mModeratorsList->findItems(idString, Qt::MatchExactly, 1);
+	
+	// Verify by checking actual IDs to ensure robustness
+	for (QTreeWidgetItem* item : items)
 	{
-		return; // ID already in list
+		GxsIdRSTreeWidgetItem *gxsItem = dynamic_cast<GxsIdRSTreeWidgetItem*>(item);
+		if (gxsItem)
+		{
+			RsGxsId existingId;
+			if (gxsItem->getId(existingId) && existingId == gxsId)
+			{
+				return; // ID already in list
+			}
+		}
 	}
 
 	auto *item = new GxsIdRSTreeWidgetItem(nullptr, GxsIdDetails::ICON_TYPE_AVATAR, true, mModeratorsList);
 	item->setId(gxsId, 0, false);
-	item->setText(1, QString::fromStdString(gxsId.toStdString()));
+	item->setText(1, idString);
 	const bool isActive = rsWiki->isActiveModerator(mCurrentGroupId, gxsId, time(nullptr));
 	if (!isActive)
 	{
