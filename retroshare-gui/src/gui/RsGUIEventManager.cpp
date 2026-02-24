@@ -142,17 +142,26 @@ bool RsGUIEventManager::GUI_askForPassword(const std::string& title, const std::
 	bool modal = true;
 
 	bool sameThread = QThread::currentThread() == qApp->thread();
-	Gui_InputDialogReturn ret;
+	Gui_InputDialogReturn ret = {0, QString()};
 	qRegisterMetaType<Gui_InputDialogReturn>("Gui_InputDialogReturn");
-	QMetaObject::invokeMethod( MainWindow::getInstance()
-	                         , "guiInputDialog"
-	                         , sameThread ? Qt::DirectConnection : Qt::BlockingQueuedConnection
-	                         , Q_RETURN_ARG(Gui_InputDialogReturn, ret)
-	                         , Q_ARG(QString,             windowTitle)
-	                         , Q_ARG(QString,             labelText)
-	                         , Q_ARG(QLineEdit::EchoMode, textEchoMode)
-	                         , Q_ARG(bool,                modal)
-	                          );
+
+    if(sameThread)
+    {
+        ret = MainWindow::getInstance()->guiInputDialog(windowTitle, labelText, textEchoMode, modal);
+    }
+    else
+    {
+        QMetaObject::invokeMethod( MainWindow::getInstance()
+                                 , "guiInputDialog"
+                                 , Qt::BlockingQueuedConnection
+                                 , Q_RETURN_ARG(Gui_InputDialogReturn, ret)
+                                 , Q_ARG(QString,             windowTitle)
+                                 , Q_ARG(QString,             labelText)
+                                 , Q_ARG(QLineEdit::EchoMode, textEchoMode)
+                                 , Q_ARG(bool,                modal)
+                                  );
+    }
+
     //cancelled = false ;
 
 	RsAutoUpdatePage::unlockAllEvents() ;
@@ -217,7 +226,6 @@ bool RsGUIEventManager::GUI_askForPluginConfirmation(const std::string& plugin_f
 void RsGUIEventManager::enable()
 {
 	QMutexLocker m(&_mutex) ;
-	std::cerr << "Enabling notification system" << std::endl;
 	_enabled = true ;
 }
 
