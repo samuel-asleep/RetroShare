@@ -53,7 +53,7 @@ private:
 	/* GxsGroupFrameDialog */
 	QString text(TextType type)override ;
 	QString icon(IconType type)override ;
-	QString settingsGroupName() { return "ForumsDialog"; }
+	QString settingsGroupName() override { return "ForumsDialog"; }
 
 	GxsGroupDialog *createNewGroupDialog() override;
 	GxsGroupDialog *createGroupDialog(GxsGroupDialog::Mode mode, RsGxsGroupId groupId) override;

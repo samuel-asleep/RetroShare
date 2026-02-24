@@ -173,7 +173,7 @@ bool RsGUIEventManager::GUI_askForPassword(const std::string& title, const std::
 	}
 
 	if (ret.execReturn == QDialog::Accepted) {
-        std::string password = ret.textValue.toStdString();
+        auto password = ret.textValue.toUtf8().constData();
         RsLoginHelper::cachePgpPassphrase(password);
         return true;
 	}
