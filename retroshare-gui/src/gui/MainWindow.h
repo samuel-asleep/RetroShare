@@ -75,7 +75,9 @@ class UserNotify;
 #ifdef RS_USE_WIKI
 class WikiDialog;
 #endif
-
+#ifdef RS_USE_WIRE
+class WireDialog;
+#endif
 #ifdef MESSENGER_WINDOW
 class MessengerWindow;
 #endif
@@ -86,7 +88,7 @@ class ApplicationWindow;
 
 struct Gui_InputDialogReturn
 {
-	int execReturn;
+	int execReturn = 0;
 	QString textValue;
 };
 Q_DECLARE_METATYPE(Gui_InputDialogReturn);
@@ -111,8 +113,13 @@ public:
         Posted             = 11, /** Posted links */
         People             = 12, /** People page. */
         Options            = 13, /** People page. */
-        Home               = 14, /** Home page. */
-        Wiki               = 15  /** Wiki. */
+        Home               = 14,  /** Home page. */
+#ifdef RS_USE_WIRE
+        Wire               = 15,  /** Wire page. */
+#endif
+#ifdef RS_USE_WIKI
+        Wiki               = 16   /** Wiki. */
+#endif
     };
 
 
@@ -175,7 +182,9 @@ public:
 #ifdef RS_USE_WIKI
 	 WikiDialog        *wikiDialog;
 #endif
-
+#ifdef RS_USE_WIRE
+     WireDialog        *wireDialog;
+#endif
 //    ForumsDialog      *forumsDialog;
 //    ChannelFeed       *channelFeed;
     Idle              *idle;
