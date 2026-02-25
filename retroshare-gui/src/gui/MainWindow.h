@@ -71,11 +71,12 @@ class BandwidthGraph;
 class MainPage;
 class NewsFeed;
 class UserNotify;
-
+#ifdef RS_USE_WIRE
+class WireDialog;
+#endif
 #ifdef RS_USE_WIKI
 class WikiDialog;
 #endif
-
 #ifdef MESSENGER_WINDOW
 class MessengerWindow;
 #endif
@@ -86,7 +87,7 @@ class ApplicationWindow;
 
 struct Gui_InputDialogReturn
 {
-	int execReturn;
+	int execReturn = 0;
 	QString textValue;
 };
 Q_DECLARE_METATYPE(Gui_InputDialogReturn);
@@ -111,8 +112,13 @@ public:
         Posted             = 11, /** Posted links */
         People             = 12, /** People page. */
         Options            = 13, /** People page. */
-        Home               = 14, /** Home page. */
-        Wiki               = 15  /** Wiki. */
+        Home               = 14,  /** Home page. */
+#ifdef RS_USE_WIKI
+        Wiki               = 15,  /** Wiki. */
+#endif
+#ifdef RS_USE_WIRE
+        Wire               = 15   /** Wire page. */
+#endif
     };
 
 
@@ -172,6 +178,9 @@ public:
 	 GxsChannelDialog  *gxschannelDialog ;
 	 GxsForumsDialog   *gxsforumDialog ;
 	 PostedDialog      *postedDialog;
+#ifdef RS_USE_WIRE
+     WireDialog        *wireDialog;
+#endif
 #ifdef RS_USE_WIKI
 	 WikiDialog        *wikiDialog;
 #endif
