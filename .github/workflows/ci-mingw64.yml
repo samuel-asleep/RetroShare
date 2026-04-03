@@ -68,3 +68,9 @@ jobs:
         run: |
           qmake-qt5.exe . -r -spec win32-g++ "CONFIG+=release" "CONFIG+=rs_autologin" "CONFIG+=no_rs_sam3" "CONFIG+=no_rs_sam3_libsam3"
           mingw32-make -j3
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: retroshare-mingw64-qt5
+          path: retroshare-gui/src/release/retroshare.exe
