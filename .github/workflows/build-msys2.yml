@@ -7,6 +7,10 @@ on:
         description: 'Branch to build'
         required: true
         default: 'master'
+        skip_rnplib:
+          description: 'If true, skip building librnp (workaround)'
+          required: false
+          default: 'false'
 
 jobs:
   build-msys2:
@@ -46,6 +50,16 @@ jobs:
             supportlibs/restbed \
             supportlibs/udp-discovery-cpp || true
 
+        - name: Ensure full git history and tags
+          shell: bash
+          run: |
+            set -euo pipefail
+            # actions/checkout may produce a shallow clone; ensure tags and history are available
+            git fetch --prune --tags || true
+            # try to unshallow if possible
+            git rev-parse --is-shallow-repository >/dev/null 2>&1 && git fetch --unshallow || true
+            git describe --tags --always || true
+
       - name: Setup MSYS2 and install packages
         uses: msys2/setup-msys2@40677d36a502eb2cf0fb808cc9dec31bf6152638
         with:
@@ -79,7 +93,14 @@ jobs:
           set -euo pipefail
           cd "$GITHUB_WORKSPACE"
           # use the qmake matching installed Qt (qt5)
-          qmake-qt5.exe . -r -spec win32-g++ "CONFIG+=release" "CONFIG+=rs_autologin" "CONFIG+=no_rs_sam3" "CONFIG+=no_rs_sam3_libsam3"
+            # Determine extra CONFIG flags
+            EXTRA_CONFIG=""
+            if [ "${{ github.event.inputs.skip_rnplib }}" = 'true' ]; then
+              EXTRA_CONFIG="$EXTRA_CONFIG CONFIG+=rs_no_rnplib"
+            fi
+            # Provide a fallback VERSION to avoid git-describe failures
+            VERSION_FALLBACK="0.0.0"
+            qmake-qt5.exe . -r -spec win32-g++ "CONFIG+=release" "CONFIG+=rs_autologin" "CONFIG+=no_rs_sam3" "CONFIG+=no_rs_sam3_libsam3" $EXTRA_CONFIG VERSION=$VERSION_FALLBACK
           mingw32-make -j3
 
       - name: Collect build artifacts (executables / deploy)
