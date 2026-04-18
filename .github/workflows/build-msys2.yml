@@ -1,0 +1,74 @@
+name: Build RetroShare (MSYS2)
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to build'
+        required: true
+        default: 'master'
+
+jobs:
+  build-msys2:
+    name: Build on MSYS2 (windows-latest)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout (with submodules)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
+          fetch-depth: 0
+          submodules: 'recursive'
+
+      - name: Setup MSYS2 and install packages
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: |
+            base-devel git wget p7zip gcc perl ruby doxygen cmake
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-miniupnpc mingw-w64-x86_64-libxslt mingw-w64-x86_64-xapian-core
+            mingw-w64-x86_64-sqlcipher mingw-w64-x86_64-qt5-base mingw-w64-x86_64-qt5-multimedia
+            mingw-w64-x86_64-ccmake mingw-w64-x86_64-rapidjson mingw-w64-x86_64-json-c
+            mingw-w64-x86_64-libbotan mingw-w64-x86_64-asio mingw-w64-x86_64-qt-creator
+
+      - name: Build RetroShare (MSYS2 MinGW64)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE"
+          # Ensure mingw qmake is on PATH (msys2/setup-msys2 should provide it,
+          # but add common location as a fallback)
+          if ! command -v qmake >/dev/null 2>&1; then
+            export PATH="/c/msys64/mingw64/bin:$PATH"
+          fi
+          echo "Using qmake: $(command -v qmake || true)"
+          qmake -r -Wall -spec win32-g++ "CONFIG+=release"
+          JOBS=$(nproc 2>/dev/null || echo 2)
+          echo "Running make with $JOBS jobs"
+          mingw32-make -j${JOBS}
+
+      - name: Collect build artifacts (executables / deploy)
+        shell: bash
+        run: |
+          set -e
+          mkdir -p build_artifacts/deploy
+          # copy any deploy outputs
+          shopt -s globstar nullglob || true
+          for d in **/deploy/*; do
+            cp -r "$d" build_artifacts/deploy/ || true
+          done
+          # copy built executables and archives
+          for f in **/*.exe **/*.zip **/*.7z **/*.tar.gz **/*.msi; do
+            if [ -f "$f" ]; then
+              cp --parents "$f" build_artifacts/deploy/ || true
+            fi
+          done
+
+      - name: Upload built artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: retroshare-msys2-${{ github.event.inputs.branch }}
+          path: build_artifacts/deploy/
+          if-no-files-found: warn
