@@ -79,7 +79,7 @@ jobs:
           set -euo pipefail
           cd "$GITHUB_WORKSPACE"
           # use the qmake matching installed Qt (qt5)
-          qmake-qt5.exe . -r -spec win32-g++ "CONFIG+=release"
+          qmake-qt5.exe . -r -spec win32-g++ "CONFIG+=release" "CONFIG+=rs_autologin" "CONFIG+=no_rs_sam3" "CONFIG+=no_rs_sam3_libsam3"
           mingw32-make -j3
 
       - name: Collect build artifacts (executables / deploy)
